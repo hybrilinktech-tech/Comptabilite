@@ -400,7 +400,7 @@
                     localStorage.setItem('utilisateurCompta', JSON.stringify(user));
                     showToast('Connexion réussie !', 'success');
                     setTimeout(() => {
-                        window.location.href = 'comptabilite.html';
+                        window.location.href = 'index.html';
                     }, 1000);
                 } else {
                     showAlert('Email ou mot de passe incorrect');
@@ -424,7 +424,7 @@
         if (utilisateurActuel) {
             const user = JSON.parse(utilisateurActuel);
             if (user.role === 'comptabilite') {
-                window.location.href = 'comptabilite.html';
+                window.location.href = 'index.html';
             }
         }
     </script>
