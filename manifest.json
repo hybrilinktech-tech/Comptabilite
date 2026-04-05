@@ -2,7 +2,7 @@
   "name": "unilu Comptabilité - Faculté Agronomique",
   "short_name": "Compta Fac",
   "description": "Application de gestion comptable pour la Faculté Agronomique",
-  "start_url": "/",
+  "start_url": "login-comptabilite.html",
   "display": "standalone",
   "theme_color": "#003366",
   "background_color": "#003366",
