@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Comptabilité - Faculté Agronomique</title>
+    <meta name="application-name" content="unilu Comptabilité">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="unilu Compta">
+    <meta name="description" content="Gestion comptabilité">
+    <meta name="theme-color" content="#003366">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icons/icon-96x96.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #003366 0%, #001a33 100%);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+        
+        .navbar-custom { 
+            background: var(--primary-blue); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .profile-photo { 
+            width: 50px; 
+            height: 50px; 
+            border-radius: 50%; 
+            background: var(--accent-yellow); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
+        .profile-photo i { font-size: 30px; color: var(--primary-blue); }
+        .profile-photo:hover { transform: scale(1.05); }
+        
+        .today-stats-bar {
+            background: linear-gradient(135deg, var(--accent-yellow), #ff9800);
+            padding: 8px 20px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .today-stats-bar i { font-size: 16px; }
+        .today-stats-bar span { background: white; padding: 2px 10px; border-radius: 20px; margin-left: 5px; color: var(--primary-blue); }
+        
+        .navbar-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .main-container {
+            min-height: calc(100vh - 70px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .btn-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn-action {
+            flex: 1;
+            min-width: 200px;
+            padding: 16px 25px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-paiement {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+        
+        .btn-rapport {
+            background: linear-gradient(135deg, #17a2b8, #0f6b7a);
+            color: white;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .register-container {
+            max-width: 580px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .register-card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px 35px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            position: relative;
+        }
+        
+        .register-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #003366, #ffb347, #003366);
+            border-radius: 30px 30px 0 0;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #003366, #002244);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.4);
+        }
+        
+        .logo-icon i { font-size: 45px; color: #ffb347; }
+        .logo h2 { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 5px; }
+        .logo p { font-size: 14px; color: #666; margin-bottom: 0; }
+        
+        .page-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #003366 0%, #001a33 100%);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .page-container.active { display: block; }
+        
+        .page-card {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            margin: 80px auto 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            position: relative;
+        }
+        
+        .page-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #003366, #ffb347, #003366);
+            border-radius: 30px 30px 0 0;
+        }
+        
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .page-header h3 { margin: 0; color: #003366; font-size: 22px; }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-back:hover { background: #5a6268; transform: translateY(-2px); }
+        
+        .form-group { margin-bottom: 18px; }
+        
+        .input-group-custom {
+            position: relative;
+        }
+        
+        .input-group-custom i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #003366;
+            font-size: 16px;
+            z-index: 1;
+        }
+        
+        .input-group-custom input, .input-group-custom select {
+            width: 100%;
+            padding: 12px 15px 12px 42px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .input-group-custom input:focus, .input-group-custom select:focus {
+            outline: none;
+            border-color: #003366;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #003366, #002244);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 51, 102, 0.5);
+        }
+        
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .info-banner {
+            background: #e8f4fd;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #003366;
+            font-size: 13px;
+        }
+        
+        .badge-offline {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+        }
+        
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            margin-top: 5px;
+        }
+        
+        .search-result-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover { background: #e8f4fd; }
+        
+        .student-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .fiche-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .fiche-item:hover { background: #e8f4fd; border-color: #003366; transform: scale(1.01); }
+        .fiche-item.selected { background: #003366; color: white; border-color: #003366; }
+        .fiche-item.selected .fiche-price { color: #ffb347; }
+        .fiche-checkbox { width: 20px; height: 20px; cursor: pointer; margin-left: 10px; }
+        
+        .total-section {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .total-amount { font-size: 28px; font-weight: bold; color: #003366; }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .stat-number { font-size: 32px; font-weight: bold; color: #003366; }
+        
+        .rapport-table {
+            overflow-x: auto;
+        }
+        
+        .rapport-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .rapport-table th, .rapport-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .rapport-table th {
+            background: #003366;
+            color: white;
+        }
+        
+        .rapport-table tr:hover { background: #f8f9fa; }
+        
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .profile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .profile-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .row { display: flex; gap: 15px; margin-bottom: 0; }
+        .row .form-group { flex: 1; }
+        @media (max-width: 550px) { .row { flex-direction: column; gap: 0; } }
+        
+        .promotion-badge {
+            background: var(--primary-blue);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        
+        /* Installation banner */
+        .install-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #003366, #002244);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1002;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .install-banner button {
+            background: #ffb347;
+            color: #003366;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        /* Styles pour l'impression du reçu */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+            }
+            .no-print {
+                display: none;
+            }
+            .receipt-exemplaire {
+                page-break-after: avoid;
+                page-break-inside: avoid;
+                margin-bottom: 30px;
+                border: 1px solid #000;
+            }
+            @page {
+                size: A4;
+                margin: 1.5cm;
+            }
+        }
+        
+        .receipt-exemplaire {
+            border: 1px solid #000;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 30px;
+            background: white;
+            font-family: 'Times New Roman', serif;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+        }
+        
+        .receipt-header h2 {
+            font-size: 16px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        
+        .receipt-header h3 {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .receipt-header p {
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .receipt-number {
+            text-align: right;
+            font-size: 14px;
+            font-weight: bold;
+            color: red;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-body {
+            margin: 20px 0;
+        }
+        
+        .receipt-line {
+            margin: 12px 0;
+            display: flex;
+            align-items: baseline;
+        }
+        
+        .receipt-label {
+            width: 180px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .receipt-value {
+            flex: 1;
+            border-bottom: 1px dotted #000;
+            padding-left: 10px;
+            font-size: 13px;
+        }
+        
+        .receipt-amount {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .receipt-amount-number {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .receipt-amount-letters {
+            font-size: 13px;
+            font-style: italic;
+        }
+        
+        .receipt-footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        
+        .receipt-signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #000;
+        }
+        
+        .receipt-logo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-logo-left {
+            width: 60px;
+            height: 60px;
+            background: #003366;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+        
+        .receipt-logo-left i {
+            font-size: 40px;
+            color: #ffb347;
+        }
+        
+        .receipt-logo-text {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-white" href="#"><i class="bi bi-calculator-fill"></i> Faculté Agronomique - Comptabilité</a>
+            <div class="navbar-right">
+                <div class="today-stats-bar">
+                    <i class="bi bi-calendar-day"></i> Aujourd'hui:
+                    <i class="bi bi-cash-stack"></i> <span id="todayMontantHeader">0 FC</span>
+                    <i class="bi bi-receipt"></i> <span id="todayCountHeader">0</span>
+                </div>
+                <div class="profile-photo" id="profileBtn"><i class="bi bi-person-circle"></i></div>
+                <button class="btn btn-outline-light" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="badge-offline" id="offlineIndicator" style="display: none;">
+        <span class="badge bg-warning text-dark"><i class="bi bi-wifi-off"></i> Mode hors-ligne</span>
+    </div>
+    
+    <div id="toastContainer" class="toast-notification"></div>
+    
+    <div class="main-container" id="mainPage">
+        <div class="register-container">
+            <div class="register-card">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="bi bi-calculator-fill"></i>
+                    </div>
+                    <h2>Faculté Agronomique</h2>
+                    <p>Espace Comptabilité</p>
+                </div>
+                <div class="btn-actions">
+                    <button class="btn-action btn-paiement" onclick="openPage('paiement')">
+                        <i class="bi bi-credit-card-fill"></i> Effectuer un paiement
+                    </button>
+                    <button class="btn-action btn-rapport" onclick="openPage('rapport')">
+                        <i class="bi bi-graph-up"></i> Voir les rapports
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Paiement -->
+    <div id="pagePaiement" class="page-container">
+        <div class="page-card">
+            <div class="page-header">
+                <h3><i class="bi bi-credit-card-fill"></i> Enregistrement paiement</h3>
+                <button class="btn-back" onclick="closePage('paiement')">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+            </div>
+            
+            <div class="info-banner">
+                <i class="bi bi-info-circle-fill"></i>
+                Sélectionnez l'année académique, la promotion, puis recherchez l'étudiant.
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <div class="input-group-custom">
+                        <i class="bi bi-calendar-fill"></i>
+                        <select id="anneeAcademiqueSelect">
+                            <option value="">Chargement...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group-custom">
+                        <i class="bi bi-mortarboard-fill"></i>
+                        <select id="promotionSelect">
+                            <option value="">Chargement...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="input-group-custom">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="searchEtudiant" placeholder="Rechercher par nom (2 lettres minimum)" autocomplete="off">
+                </div>
+            </div>
+            
+            <div id="searchResults" class="search-results" style="display: none;"></div>
+            
+            <div id="studentInfo" style="display: none;">
+                <div class="student-card" id="studentDetails"></div>
+            </div>
+            
+            <div id="fichesContainer" style="display: none;">
+                <h6><i class="bi bi-file-text-fill"></i> Fiches disponibles (Cliquez sur une fiche pour la sélectionner)</h6>
+                <div id="fichesList"></div>
+                
+                <div class="total-section">
+                    <span>Montant total :</span>
+                    <div class="total-amount" id="totalAmount">0 Fc</div>
+                </div>
+                
+                <button class="btn-submit" id="validerPaiementBtn">
+                    <i class="bi bi-check-circle-fill"></i> Valider le paiement
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Rapport -->
+    <div id="pageRapport" class="page-container">
+        <div class="page-card" style="max-width: 1200px;">
+            <div class="page-header">
+                <h3><i class="bi bi-graph-up"></i> Rapport des paiements</h3>
+                <button class="btn-back" onclick="closePage('rapport')">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+            </div>
+            
+            <div class="filter-section">
+                <div class="row">
+                    <div class="form-group">
+                        <div class="input-group-custom">
+                            <i class="bi bi-calendar-fill"></i>
+                            <select id="rapportAnneeSelect">
+                                <option value="">Toutes les années</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group-custom">
+                            <i class="bi bi-mortarboard-fill"></i>
+                            <select id="rapportPromotionSelect">
+                                <option value="">Toutes les promotions</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn-submit" onclick="genererRapport()" style="margin-top: 0;">
+                            <i class="bi bi-search"></i> Filtrer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <i class="bi bi-cash-stack" style="font-size: 40px; color: #28a745;"></i>
+                        <div class="stat-number" id="totalMontant">0 Fc</div>
+                        <span>Montant total collecté</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <i class="bi bi-receipt" style="font-size: 40px; color: #17a2b8;"></i>
+                        <div class="stat-number" id="totalTransactions">0</div>
+                        <span>Nombre de transactions</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <i class="bi bi-people-fill" style="font-size: 40px; color: #ffc107;"></i>
+                        <div class="stat-number" id="totalEtudiants">0</div>
+                        <span>Étudiants servis</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="rapport-table">
+                <table>
+                    <thead>
+                        <tr><th>Date</th><th>N° Reçu</th><th>Étudiant</th><th>Promotion</th><th>Année académique</th><th>Fiches</th><th>Montant</th></tr>
+                    </thead>
+                    <tbody id="rapportTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Aucune transaction</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div id="profileModal" style="display:none;">
+        <div class="profile-modal">
+            <div class="profile-modal-content">
+                <div class="text-center">
+                    <i class="bi bi-person-circle" style="font-size:80px;"></i>
+                    <h4 id="profilNom"></h4>
+                    <p id="profilMatricule"></p>
+                    <p id="profilEmail"></p>
+                    <hr>
+                    <h5>Changer mot de passe</h5>
+                    <input type="password" class="form-control mb-2" id="newPassword" placeholder="Nouveau mot de passe">
+                    <input type="password" class="form-control mb-2" id="confirmNewPassword" placeholder="Confirmer">
+                    <button class="btn-action" id="changePasswordBtn">Modifier</button>
+                    <button class="btn btn-secondary mt-2 w-100" onclick="closeProfileModal()">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="receiptModal" style="display: none;"></div>
+    
+    <!-- Installation Banner -->
+    <div id="installBanner" class="install-banner" style="display: none;">
+        <div>
+            <i class="bi bi-download"></i> <strong>Installer l'application</strong><br>
+            <small>Installez cette application sur votre appareil pour y accéder rapidement</small>
+        </div>
+        <button id="installBtn">Installer</button>
+        <button onclick="document.getElementById('installBanner').style.display='none'" style="background: none; color: white; font-size: 20px;">&times;</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        let isOnline = navigator.onLine;
+        let currentStudent = null;
+        let selectedFiches = [];
+        let allStudents = [];
+        let allPromotions = [];
+        let allAnnees = [];
+        let allFiches = [];
+        let searchTimeout = null;
+        
+        // PWA Installation
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').style.display = 'flex';
+        });
+        
+        document.getElementById('installBtn')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    showToast('Application installée avec succès!', 'success');
+                }
+                deferredPrompt = null;
+                document.getElementById('installBanner').style.display = 'none';
+            }
+        });
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('Service Worker enregistré:', reg.scope);
+                }).catch(err => {
+                    console.log('Erreur Service Worker:', err);
+                });
+            });
+        }
+        
+        function getPromotionNom(promotionId) {
+            if (!promotionId) return 'Non définie';
+            const promo = allPromotions.find(p => p.id === promotionId);
+            return promo ? promo.nom : promotionId;
+        }
+        
+        function numberToWords(number) {
+            const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+            const tens = ['', 'dix', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante-dix', 'quatre-vingt', 'quatre-vingt-dix'];
+            
+            function convertLessThanThousand(n) {
+                if (n === 0) return '';
+                if (n < 20) return units[n];
+                if (n < 100) {
+                    let unit = n % 10;
+                    let ten = Math.floor(n / 10);
+                    if (ten === 7 || ten === 9) {
+                        return tens[ten - 1] + (unit ? '-' + units[unit + 10] : '');
+                    }
+                    return tens[ten] + (unit ? '-' + units[unit] : '');
+                }
+                let hundred = Math.floor(n / 100);
+                let rest = n % 100;
+                let result = hundred === 1 ? 'cent' : units[hundred] + '-cent';
+                if (rest > 0) result += '-' + convertLessThanThousand(rest);
+                return result;
+            }
+            
+            if (number === 0) return 'zéro';
+            let result = '';
+            let millions = Math.floor(number / 1000000);
+            let thousands = Math.floor((number % 1000000) / 1000);
+            let rest = number % 1000;
+            
+            if (millions > 0) {
+                result += convertLessThanThousand(millions) + (millions === 1 ? ' million' : ' millions');
+                if (thousands > 0 || rest > 0) result += ' ';
+            }
+            if (thousands > 0) {
+                if (thousands === 1) result += 'mille';
+                else result += convertLessThanThousand(thousands) + ' mille';
+                if (rest > 0) result += ' ';
+            }
+            if (rest > 0) result += convertLessThanThousand(rest);
+            return result.toUpperCase() + ' FRANCS CONGOLAIS';
+        }
+        
+        const utilisateurActuel = JSON.parse(localStorage.getItem('utilisateurCompta') || 'null');
+        if (!utilisateurActuel || utilisateurActuel.role !== 'comptabilite') {
+            window.location.href = 'login-comptabilite.html';
+        }
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const bgColor = type === 'success' ? '#28a745' : (type === 'warning' ? '#ffc107' : '#dc3545');
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : (type === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill');
+            const toastHtml = `<div class="toast" style="background: ${bgColor}; color: ${textColor}; border-radius: 10px; margin-bottom: 10px; animation: slideInRight 0.3s ease-out;"><div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div></div>`;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => container.firstElementChild?.remove(), 4000);
+        }
+        
+        function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
+        async function mettreAJourStatsHeader() {
+            try {
+                const aujourdhui = new Date();
+                aujourdhui.setHours(0, 0, 0, 0);
+                const demain = new Date(aujourdhui);
+                demain.setDate(demain.getDate() + 1);
+                const snapshot = await db.collection('transactions').where('date', '>=', aujourdhui).where('date', '<', demain).get();
+                let total = 0;
+                snapshot.forEach(doc => { total += doc.data().montantTotal || 0; });
+                document.getElementById('todayMontantHeader').textContent = total.toLocaleString() + ' FC';
+                document.getElementById('todayCountHeader').textContent = snapshot.size;
+            } catch(e) { console.error(e); }
+        }
+        
+        // Écouteurs temps réel
+        db.collection('anneesAcademiques').onSnapshot(snapshot => {
+            allAnnees = [];
+            snapshot.forEach(doc => allAnnees.push({ id: doc.id, ...doc.data() }));
+            const anneeSelect = document.getElementById('anneeAcademiqueSelect');
+            const rapportAnnee = document.getElementById('rapportAnneeSelect');
+            if(anneeSelect) {
+                anneeSelect.innerHTML = '<option value="">Sélectionner l\'année</option>';
+                allAnnees.forEach(a => anneeSelect.innerHTML += `<option value="${a.id}">${escapeHtml(a.annee || a.nom)}</option>`);
+            }
+            if(rapportAnnee) {
+                rapportAnnee.innerHTML = '<option value="">Toutes les années</option>';
+                allAnnees.forEach(a => rapportAnnee.innerHTML += `<option value="${a.id}">${escapeHtml(a.annee || a.nom)}</option>`);
+            }
+        });
+        
+        db.collection('promotions').onSnapshot(snapshot => {
+            allPromotions = [];
+            snapshot.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
+            const promoSelect = document.getElementById('promotionSelect');
+            const rapportPromo = document.getElementById('rapportPromotionSelect');
+            if(promoSelect) {
+                promoSelect.innerHTML = '<option value="">Sélectionner la promotion</option>';
+                allPromotions.forEach(p => promoSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
+            }
+            if(rapportPromo) {
+                rapportPromo.innerHTML = '<option value="">Toutes les promotions</option>';
+                allPromotions.forEach(p => rapportPromo.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
+            }
+            if (currentStudent) {
+                const promoNom = getPromotionNom(currentStudent.promotion);
+                document.getElementById('studentDetails').innerHTML = `<i class="bi bi-person-badge"></i> <strong>${escapeHtml(currentStudent.nomComplet)}</strong><br><i class="bi bi-mortarboard-fill"></i> Promotion: <span class="promotion-badge">${escapeHtml(promoNom)}</span><br><i class="bi bi-file-text"></i> Matricule: ${escapeHtml(currentStudent.id)}`;
+            }
+        });
+        
+        db.collection('etudiants').onSnapshot(snapshot => {
+            allStudents = [];
+            snapshot.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+        });
+        
+        db.collection('fiches').onSnapshot(snapshot => {
+            allFiches = [];
+            snapshot.forEach(doc => allFiches.push({ id: doc.id, ...doc.data() }));
+        });
+        
+        db.collection('transactions').onSnapshot(() => { mettreAJourStatsHeader(); });
+        
+        function openPage(page) {
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`).classList.add('active');
+            if (page === 'rapport') genererRapport();
+        }
+        
+        function closePage(page) {
+            document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`).classList.remove('active');
+            document.getElementById('mainPage').style.display = 'flex';
+            if (page === 'paiement') {
+                currentStudent = null;
+                selectedFiches = [];
+                document.getElementById('searchEtudiant').value = '';
+                document.getElementById('searchResults').style.display = 'none';
+                document.getElementById('studentInfo').style.display = 'none';
+                document.getElementById('fichesContainer').style.display = 'none';
+            }
+        }
+        
+        const searchInput = document.getElementById('searchEtudiant');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                if (searchTimeout) clearTimeout(searchTimeout);
+                if (searchTerm.length < 2) { document.getElementById('searchResults').style.display = 'none'; return; }
+                searchTimeout = setTimeout(() => {
+                    const results = allStudents.filter(student => student.nom && student.nom.toLowerCase().includes(searchTerm.toLowerCase()));
+                    const resultsDiv = document.getElementById('searchResults');
+                    if (results.length > 0) {
+                        resultsDiv.innerHTML = results.map(student => {
+                            const promoNom = getPromotionNom(student.promotion);
+                            return `<div class="search-result-item" onclick="selectionnerEtudiant('${student.id}', '${student.nom}', '${student.promotion || ''}')"><i class="bi bi-person-circle"></i> <strong>${escapeHtml(student.nom)}</strong><br><small>${student.matricule || student.id} - ${escapeHtml(promoNom)}</small></div>`;
+                        }).join('');
+                        resultsDiv.style.display = 'block';
+                    } else {
+                        resultsDiv.innerHTML = '<div class="search-result-item">Aucun étudiant trouvé</div>';
+                        resultsDiv.style.display = 'block';
+                    }
+                }, 300);
+            });
+        }
+        
+        window.selectionnerEtudiant = function(id, nom, promotionId) {
+            currentStudent = { id: id, nomComplet: nom, promotion: promotionId || '' };
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchEtudiant').value = nom;
+            document.getElementById('studentInfo').style.display = 'block';
+            const promoNom = getPromotionNom(promotionId);
+            document.getElementById('studentDetails').innerHTML = `<i class="bi bi-person-badge"></i> <strong>${escapeHtml(nom)}</strong><br><i class="bi bi-mortarboard-fill"></i> Promotion: <span class="promotion-badge">${escapeHtml(promoNom)}</span><br><i class="bi bi-file-text"></i> Matricule: ${escapeHtml(id)}`;
+            chargerFichesEtudiant(promotionId);
+        }
+        
+        function chargerFichesEtudiant(promotionId) {
+            if (!promotionId) { document.getElementById('fichesContainer').style.display = 'none'; showToast('Cet étudiant n\'a pas de promotion assignée', 'warning'); return; }
+            const fichesPromo = allFiches.filter(f => f.promotion === promotionId);
+            const fichesListDiv = document.getElementById('fichesList');
+            if (fichesPromo.length > 0) {
+                fichesListDiv.innerHTML = fichesPromo.map(fiche => `
+                    <div class="fiche-item" data-id="${fiche.id}" data-prix="${fiche.montant || 0}" onclick="toggleFicheDirect('${fiche.id}', ${fiche.montant || 0})">
+                        <div><strong>${escapeHtml(fiche.nom)}</strong><br><small>${escapeHtml(fiche.description || '')}</small></div>
+                        <div><span class="fiche-price">${(fiche.montant || 0).toLocaleString()} Fc</span>
+                        <input type="checkbox" class="fiche-checkbox" id="fiche_${fiche.id}" onclick="event.stopPropagation()" onchange="toggleFicheCheckbox('${fiche.id}', ${fiche.montant || 0})"></div>
+                    </div>
+                `).join('');
+                document.getElementById('fichesContainer').style.display = 'block';
+            } else {
+                fichesListDiv.innerHTML = '<div class="info-banner"><i class="bi bi-info-circle"></i> Aucune fiche disponible pour cette promotion</div>';
+                document.getElementById('fichesContainer').style.display = 'block';
+            }
+            selectedFiches = [];
+            updateTotal();
+        }
+        
+        window.toggleFicheDirect = function(ficheId, prix) {
+            const checkbox = document.getElementById(`fiche_${ficheId}`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                toggleFicheCheckbox(ficheId, prix);
+                const ficheDiv = checkbox.closest('.fiche-item');
+                if (ficheDiv) {
+                    if (checkbox.checked) ficheDiv.classList.add('selected');
+                    else ficheDiv.classList.remove('selected');
+                }
+            }
+        }
+        
+        window.toggleFicheCheckbox = function(ficheId, prix) {
+            const index = selectedFiches.findIndex(f => f.id === ficheId);
+            if (index === -1) selectedFiches.push({ id: ficheId, prix });
+            else selectedFiches.splice(index, 1);
+            updateTotal();
+            const ficheDiv = document.getElementById(`fiche_${ficheId}`)?.closest('.fiche-item');
+            if (ficheDiv) {
+                if (selectedFiches.find(f => f.id === ficheId)) ficheDiv.classList.add('selected');
+                else ficheDiv.classList.remove('selected');
+            }
+        }
+        
+        function updateTotal() { const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0); document.getElementById('totalAmount').innerHTML = `${total.toLocaleString()} Fc`; }
+        
+        function genererNumeroReçu() {
+            const annee = new Date().getFullYear();
+            const mois = String(new Date().getMonth() + 1).padStart(2, '0');
+            const jour = String(new Date().getDate()).padStart(2, '0');
+            const heures = String(new Date().getHours()).padStart(2, '0');
+            const minutes = String(new Date().getMinutes()).padStart(2, '0');
+            const secondes = String(new Date().getSeconds()).padStart(2, '0');
+            return `${annee}${mois}${jour}-${heures}${minutes}${secondes}`;
+        }
+        
+        function imprimerReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu) {
+            const date = new Date().toLocaleDateString('fr-FR');
+            const fichesNoms = fiches.map(f => f.nom || 'Fiche').join(', ');
+            
+            const receiptHTML = `
+                <div class="print-area" id="printArea">
+                    <!-- Exemplaire 1 - Étudiant -->
+                    <div class="receipt-exemplaire">
+                        <div class="receipt-logo">
+                            <div class="receipt-logo-left">
+                                <i class="bi bi-tree-fill"></i>
+                            </div>
+                            <div class="receipt-logo-text">
+                                <h2>UNIVERSITÉ DE LUBUMBASHI</h2>
+                                <h3>ADMINISTRATION DU BUDGET</h3>
+                                <p>FACULTÉ D'AGRONOMIE</p>
+                            </div>
+                            <div style="width: 60px;"></div>
+                        </div>
+                        <div class="receipt-number">
+                            N° ${numeroReçu}
+                        </div>
+                        <div class="receipt-body">
+                            <div class="receipt-line">
+                                <span class="receipt-label">N° Reçu de l'étudiant(e) :</span>
+                                <span class="receipt-value">${escapeHtml(transaction.etudiantNom)}</span>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Promotion :</span>
+                                <span class="receipt-value">${escapeHtml(promoNom)}</span>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Matricule :</span>
+                                <span class="receipt-value">${escapeHtml(transaction.etudiantMatricule)}</span>
+                            </div>
+                            <div class="receipt-amount">
+                                <div>La somme de (En chiffres)</div>
+                                <div class="receipt-amount-number">${total.toLocaleString()} FC</div>
+                                <div>(En lettres)</div>
+                                <div class="receipt-amount-letters">${montantLettres}</div>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Motif :</span>
+                                <span class="receipt-value">Paiement des frais : ${fichesNoms}</span>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Année académique :</span>
+                                <span class="receipt-value">${annee}</span>
+                            </div>
+                        </div>
+                        <div class="receipt-footer">
+                            <div>Fait à Lubumbashi, le ${date}</div>
+                            <div>Signature de l'AB</div>
+                        </div>
+                        <div class="receipt-signature">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>SCIENTIA SPLENDET ET CONSCIENTIA</div>
+                                <div>Nom et signature du représentant</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Exemplaire 2 - Administration -->
+                    <div class="receipt-exemplaire">
+                        <div class="receipt-logo">
+                            <div class="receipt-logo-left">
+                                <i class="bi bi-tree-fill"></i>
+                            </div>
+                            <div class="receipt-logo-text">
+                                <h2>UNIVERSITÉ DE LUBUMBASHI</h2>
+                                <h3>ADMINISTRATION DU BUDGET</h3>
+                                <p>FACULTÉ D'AGRONOMIE</p>
+                            </div>
+                            <div style="width: 60px;"></div>
+                        </div>
+                        <div class="receipt-number">
+                            N° ${numeroReçu}
+                        </div>
+                        <div class="receipt-body">
+                            <div class="receipt-line">
+                                <span class="receipt-label">N° Reçu de l'étudiant(e) :</span>
+                                <span class="receipt-value">${escapeHtml(transaction.etudiantNom)}</span>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Promotion :</span>
+                                <span class="receipt-value">${escapeHtml(promoNom)}</span>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Matricule :</span>
+                                <span class="receipt-value">${escapeHtml(transaction.etudiantMatricule)}</span>
+                            </div>
+                            <div class="receipt-amount">
+                                <div>La somme de (En chiffres)</div>
+                                <div class="receipt-amount-number">${total.toLocaleString()} FC</div>
+                                <div>(En lettres)</div>
+                                <div class="receipt-amount-letters">${montantLettres}</div>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Motif :</span>
+                                <span class="receipt-value">Paiement des frais : ${fichesNoms}</span>
+                            </div>
+                            <div class="receipt-line">
+                                <span class="receipt-label">Année académique :</span>
+                                <span class="receipt-value">${annee}</span>
+                            </div>
+                        </div>
+                        <div class="receipt-footer">
+                            <div>Fait à Lubumbashi, le ${date}</div>
+                            <div>Signature de l'AB</div>
+                        </div>
+                        <div class="receipt-signature">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>SCIENTIA SPLENDET ET CONSCIENTIA</div>
+                                <div>Nom et signature du représentant</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`<html><head><title>Reçu de paiement - ${numeroReçu}</title><style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Times New Roman', serif; padding: 20px; }
+                .receipt-exemplaire { 
+                    border: 1px solid #000; 
+                    border-radius: 5px; 
+                    padding: 20px; 
+                    margin-bottom: 30px; 
+                    background: white;
+                    page-break-after: avoid;
+                    page-break-inside: avoid;
+                }
+                .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
+                .receipt-header h2 { font-size: 16px; margin: 0; text-transform: uppercase; }
+                .receipt-header h3 { font-size: 14px; margin: 5px 0; }
+                .receipt-header p { font-size: 12px; margin: 0; }
+                .receipt-number { text-align: right; font-size: 14px; font-weight: bold; color: red; margin-bottom: 15px; }
+                .receipt-body { margin: 20px 0; }
+                .receipt-line { margin: 12px 0; display: flex; align-items: baseline; }
+                .receipt-label { width: 180px; font-weight: bold; font-size: 13px; }
+                .receipt-value { flex: 1; border-bottom: 1px dotted #000; padding-left: 10px; font-size: 13px; }
+                .receipt-amount { margin: 20px 0; text-align: center; }
+                .receipt-amount-number { font-size: 20px; font-weight: bold; margin: 5px 0; }
+                .receipt-amount-letters { font-size: 13px; font-style: italic; }
+                .receipt-footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; }
+                .receipt-signature { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #000; }
+                .receipt-logo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+                .receipt-logo-left { width: 60px; height: 60px; background: #003366; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+                .receipt-logo-left i { font-size: 40px; color: #ffb347; }
+                .receipt-logo-text { text-align: center; }
+                @media print {
+                    body { margin: 0; padding: 0; }
+                    .receipt-exemplaire { margin-bottom: 20px; page-break-after: avoid; }
+                    @page { size: A4; margin: 1.5cm; }
+                }
+            </style></head><body>${receiptHTML}</body></html>`);
+            printWindow.document.close();
+            
+            printWindow.onload = function() {
+                setTimeout(function() {
+                    printWindow.print();
+                    printWindow.onafterprint = function() {
+                        printWindow.close();
+                    };
+                }, 500);
+            };
+        }
+        
+        async function validerPaiement() {
+            if (!currentStudent) { showToast('Veuillez sélectionner un étudiant', 'warning'); return; }
+            if (selectedFiches.length === 0) { showToast('Veuillez sélectionner au moins une fiche', 'warning'); return; }
+            const anneeId = document.getElementById('anneeAcademiqueSelect').value;
+            if (!anneeId) { showToast('Veuillez sélectionner l\'année académique', 'warning'); return; }
+            
+            const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0);
+            const numeroReçu = genererNumeroReçu();
+            const anneeNom = allAnnees.find(a => a.id === anneeId)?.annee || '-';
+            const promoNom = getPromotionNom(currentStudent.promotion);
+            const fichesDetails = selectedFiches.map(f => ({ id: f.id, ...allFiches.find(fiche => fiche.id === f.id), prix: f.prix }));
+            const montantLettres = numberToWords(total);
+            
+            const transaction = {
+                id: numeroReçu,
+                numeroRecu: numeroReçu,
+                etudiantId: currentStudent.id,
+                etudiantNom: currentStudent.nomComplet,
+                etudiantMatricule: currentStudent.id,
+                promotion: currentStudent.promotion,
+                promotionNom: promoNom,
+                anneeAcademiqueId: anneeId,
+                anneeAcademiqueNom: anneeNom,
+                fiches: fichesDetails,
+                montantTotal: total,
+                montantLettres: montantLettres,
+                date: firebase.firestore.FieldValue.serverTimestamp(),
+                comptable: utilisateurActuel.nomComplet,
+                comptableId: utilisateurActuel.id
+            };
+            
+            const btn = document.getElementById('validerPaiementBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement...';
+            btn.disabled = true;
+            
+            try {
+                await db.collection('transactions').doc(numeroReçu).set(transaction);
+                
+                showToast('Paiement enregistré, préparation de l\'impression...', 'success');
+                
+                imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
+                
+                selectedFiches = [];
+                updateTotal();
+                document.getElementById('fichesContainer').style.display = 'none';
+                document.getElementById('studentInfo').style.display = 'none';
+                document.getElementById('searchEtudiant').value = '';
+                currentStudent = null;
+                
+                showToast('Paiement effectué avec succès ! L\'impression va démarrer...', 'success');
+            } catch (error) { 
+                showToast('Erreur lors du paiement: ' + error.message, 'error');
+                console.error(error);
+            }
+            finally { 
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+            }
+        }
+        
+        document.getElementById('validerPaiementBtn') && (document.getElementById('validerPaiementBtn').onclick = validerPaiement);
+        
+        async function genererRapport() {
+            const anneeId = document.getElementById('rapportAnneeSelect').value;
+            const promotionId = document.getElementById('rapportPromotionSelect').value;
+            const snapshot = await db.collection('transactions').orderBy('date', 'desc').get();
+            let transactions = [];
+            snapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
+            if (anneeId) transactions = transactions.filter(t => t.anneeAcademiqueId === anneeId);
+            if (promotionId) transactions = transactions.filter(t => t.promotion === promotionId);
+            const totalMontant = transactions.reduce((sum, t) => sum + (t.montantTotal || 0), 0);
+            const totalEtudiants = new Set(transactions.map(t => t.etudiantId)).size;
+            document.getElementById('totalMontant').innerHTML = `${totalMontant.toLocaleString()} Fc`;
+            document.getElementById('totalTransactions').innerHTML = transactions.length;
+            document.getElementById('totalEtudiants').innerHTML = totalEtudiants;
+            const tbody = document.getElementById('rapportTableBody');
+            if (transactions.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Aucune transaction</td></tr>';
+            else tbody.innerHTML = transactions.map(t => `<tr>
+                <td>${t.date ? new Date(t.date.toDate()).toLocaleDateString('fr-FR') : '-'}</td>
+                <td><span style="color:red; font-weight:bold;">${t.numeroRecu || t.id}</span></td>
+                <td>${escapeHtml(t.etudiantNom || '-')}</td>
+                <td>${escapeHtml(t.promotionNom || t.promotion || '-')}</td>
+                <td>${escapeHtml(t.anneeAcademiqueNom || '-')}</td>
+                <td>${t.fiches?.length || 0}</td>
+                <td>${(t.montantTotal || 0).toLocaleString()} Fc</td>
+            </tr>`).join('');
+        }
+        
+        // Profil
+        document.getElementById('profileBtn')?.addEventListener('click', () => {
+            document.getElementById('profilNom').textContent = utilisateurActuel.nomComplet;
+            document.getElementById('profilMatricule').textContent = `ID: ${utilisateurActuel.id || '-'}`;
+            document.getElementById('profilEmail').textContent = `Email: ${utilisateurActuel.email || '-'}`;
+            document.getElementById('profileModal').style.display = 'flex';
+        });
+        
+        window.closeProfileModal = () => document.getElementById('profileModal').style.display = 'none';
+        
+        document.getElementById('changePasswordBtn')?.addEventListener('click', async () => {
+            const np = document.getElementById('newPassword').value;
+            const cp = document.getElementById('confirmNewPassword').value;
+            if (np !== cp) { alert('Mots de passe différents'); return; }
+            if (np.length < 4) { alert('Minimum 4 caractères'); return; }
+            await db.collection('utilisateurs').doc(utilisateurActuel.id).update({ motDePasse: np });
+            alert('Mot de passe modifié');
+            closeProfileModal();
+        });
+        
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('utilisateurCompta');
+            window.location.href = 'login-comptabilite.html';
+        });
+        
+        window.addEventListener('online', () => { isOnline = true; document.getElementById('offlineIndicator').style.display = 'none'; showToast('🟢 Connecté', 'success'); });
+        window.addEventListener('offline', () => { isOnline = false; document.getElementById('offlineIndicator').style.display = 'block'; showToast('🔴 Mode hors-ligne', 'warning'); });
+        
+        mettreAJourStatsHeader();
+        
+        // Expose global functions
+        window.openPage = openPage;
+        window.closePage = closePage;
+        window.genererRapport = genererRapport;
+    </script>
+</body>
+</html>
