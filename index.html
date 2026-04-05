@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Comptabilité - Faculté Agronomique</title>
-    <meta name="application-name" content="unilu Comptabilité">
+    <meta name="application-name" content="hybrilink Comptabilité">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="unilu Compta">
+    <meta name="apple-mobile-web-app-title" content="hybrilink Compta">
     <meta name="description" content="Gestion comptabilité">
     <meta name="theme-color" content="#003366">
     
@@ -15,10 +15,10 @@
     <link rel="manifest" href="manifest.json">
     
     <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="icons/icon-96x96.png">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -1075,25 +1075,42 @@
         }
         
         function chargerFichesEtudiant(promotionId) {
-            if (!promotionId) { document.getElementById('fichesContainer').style.display = 'none'; showToast('Cet étudiant n\'a pas de promotion assignée', 'warning'); return; }
-            const fichesPromo = allFiches.filter(f => f.promotion === promotionId);
-            const fichesListDiv = document.getElementById('fichesList');
-            if (fichesPromo.length > 0) {
-                fichesListDiv.innerHTML = fichesPromo.map(fiche => `
-                    <div class="fiche-item" data-id="${fiche.id}" data-prix="${fiche.montant || 0}" onclick="toggleFicheDirect('${fiche.id}', ${fiche.montant || 0})">
-                        <div><strong>${escapeHtml(fiche.nom)}</strong><br><small>${escapeHtml(fiche.description || '')}</small></div>
-                        <div><span class="fiche-price">${(fiche.montant || 0).toLocaleString()} Fc</span>
-                        <input type="checkbox" class="fiche-checkbox" id="fiche_${fiche.id}" onclick="event.stopPropagation()" onchange="toggleFicheCheckbox('${fiche.id}', ${fiche.montant || 0})"></div>
-                    </div>
-                `).join('');
-                document.getElementById('fichesContainer').style.display = 'block';
-            } else {
-                fichesListDiv.innerHTML = '<div class="info-banner"><i class="bi bi-info-circle"></i> Aucune fiche disponible pour cette promotion</div>';
-                document.getElementById('fichesContainer').style.display = 'block';
-            }
-            selectedFiches = [];
-            updateTotal();
+    if (!promotionId) { 
+        document.getElementById('fichesContainer').style.display = 'none'; 
+        showToast('Cet étudiant n\'a pas de promotion assignée', 'warning'); 
+        return; 
+    }
+    
+    // Filtrer les fiches qui concernent cette promotion
+    const fichesPromo = allFiches.filter(fiche => {
+        // Nouveau format : tableau promotions
+        if (fiche.promotions && Array.isArray(fiche.promotions)) {
+            return fiche.promotions.includes(promotionId);
         }
+        // Ancien format : champ promotion simple
+        else if (fiche.promotion) {
+            return fiche.promotion === promotionId;
+        }
+        return false;
+    });
+    
+    const fichesListDiv = document.getElementById('fichesList');
+    if (fichesPromo.length > 0) {
+        fichesListDiv.innerHTML = fichesPromo.map(fiche => `
+            <div class="fiche-item" data-id="${fiche.id}" data-prix="${fiche.montant || 0}" onclick="toggleFicheDirect('${fiche.id}', ${fiche.montant || 0})">
+                <div><strong>${escapeHtml(fiche.nom)}</strong><br><small>${escapeHtml(fiche.description || '')}</small></div>
+                <div><span class="fiche-price">${(fiche.montant || 0).toLocaleString()} Fc</span>
+                <input type="checkbox" class="fiche-checkbox" id="fiche_${fiche.id}" onclick="event.stopPropagation()" onchange="toggleFicheCheckbox('${fiche.id}', ${fiche.montant || 0})"></div>
+            </div>
+        `).join('');
+        document.getElementById('fichesContainer').style.display = 'block';
+    } else {
+        fichesListDiv.innerHTML = '<div class="info-banner"><i class="bi bi-info-circle"></i> Aucune fiche disponible pour cette promotion</div>';
+        document.getElementById('fichesContainer').style.display = 'block';
+    }
+    selectedFiches = [];
+    updateTotal();
+}
         
         window.toggleFicheDirect = function(ficheId, prix) {
             const checkbox = document.getElementById(`fiche_${ficheId}`);
