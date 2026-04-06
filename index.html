@@ -120,11 +120,6 @@
             color: white;
         }
         
-        .btn-about {
-            background: linear-gradient(135deg, #6c757d, #495057);
-            color: white;
-        }
-        
         .btn-action:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
@@ -515,168 +510,6 @@
             cursor: pointer;
         }
         
-        /* Style pour la page À propos */
-        .about-container {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
-            border-radius: 20px;
-            padding: 40px;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        .about-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .about-logo img {
-            width: 120px;
-            height: 120px;
-            border-radius: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s;
-        }
-        
-        .about-logo img:hover {
-            transform: scale(1.05);
-        }
-        
-        .about-logo h2 {
-            margin-top: 15px;
-            color: var(--primary-blue);
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-        
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .service-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        }
-        
-        .service-card i {
-            font-size: 40px;
-            color: var(--accent-yellow);
-            margin-bottom: 15px;
-        }
-        
-        .service-card h5 {
-            color: var(--primary-blue);
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .promise-box {
-            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
-            color: white;
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .promise-box i {
-            font-size: 50px;
-            color: var(--accent-yellow);
-            margin-bottom: 15px;
-        }
-        
-        .contact-info {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 20px;
-        }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
-            border-bottom: 1px solid #e0e0e0;
-            transition: all 0.3s;
-        }
-        
-        .contact-item:hover {
-            background: #f8f9fa;
-            transform: translateX(5px);
-        }
-        
-        .contact-item i {
-            font-size: 24px;
-            color: var(--primary-blue);
-            width: 40px;
-        }
-        
-        .contact-item a {
-            color: var(--primary-blue);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .contact-item a:hover {
-            color: var(--accent-yellow);
-        }
-        
-        .website-btn {
-            display: inline-block;
-            background: var(--primary-blue);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s;
-            margin-top: 20px;
-        }
-        
-        .website-btn:hover {
-            background: var(--accent-yellow);
-            color: var(--primary-blue);
-            transform: translateY(-2px);
-        }
-        
-        .info-text {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 13px;
-            color: #888;
-        }
-        
-        .info-text i {
-            color: #003366;
-        }
-        
-        .info-text img {
-            border-radius: 30px;
-        }
-        
-        .info-text a {
-            color: #003366;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .info-text a:hover {
-            text-decoration: underline;
-        }
-        
         @media print {
             body * {
                 visibility: hidden;
@@ -720,6 +553,7 @@
             overflow: hidden;
         }
         
+        /* Style du filigrane flou centré */
         .receipt-watermark {
             position: absolute;
             top: 50%;
@@ -888,9 +722,6 @@
                     <button class="btn-action btn-rapport" onclick="openPage('rapport')">
                         <i class="bi bi-graph-up"></i> Voir les rapports
                     </button>
-                    <button class="btn-action btn-about" onclick="openPage('about')">
-                        <i class="bi bi-info-circle-fill"></i> À propos
-                    </button>
                 </div>
             </div>
         </div>
@@ -1033,84 +864,6 @@
         </div>
     </div>
     
-    <!-- Page À propos -->
-    <div id="pageAbout" class="page-container">
-        <div class="page-card" style="max-width: 900px;">
-            <div class="page-header">
-                <h3><i class="bi bi-info-circle-fill"></i> À propos</h3>
-                <button class="btn-back" onclick="closePage('about')">
-                    <i class="bi bi-arrow-left"></i> Retour
-                </button>
-            </div>
-            
-            <div class="about-container">
-                <div class="about-logo">
-                    <img src="t.png" alt="HYBRILINK-TECH Logo" onerror="this.src='https://via.placeholder.com/120x120?text=HT'">
-                    <h2>HYBRILINK - TECH</h2>
-                </div>
-                
-                <div class="text-center mb-4">
-                    <h3 style="color: var(--primary-blue);">HYBRILINK - Votre Partenaire Digital Complet</h3>
-                </div>
-                
-                <div class="services-grid">
-                    <div class="service-card">
-                        <i class="bi bi-laptop"></i>
-                        <h5>Support Bureautique</h5>
-                        <p>Installation, formation & dépannage</p>
-                    </div>
-                    <div class="service-card">
-                        <i class="bi bi-diagram-3"></i>
-                        <h5>Administration Réseau</h5>
-                        <p>Administration Réseau & Systèmes</p>
-                    </div>
-                    <div class="service-card">
-                        <i class="bi bi-tools"></i>
-                        <h5>Maintenance</h5>
-                        <p>Maintenance & Dépannage Informatique</p>
-                    </div>
-                    <div class="service-card">
-                        <i class="bi bi-code-square"></i>
-                        <h5>Développement Web</h5>
-                        <p>Développement d'Applications Web</p>
-                    </div>
-                    <div class="service-card">
-                        <i class="bi bi-gear"></i>
-                        <h5>Solutions Sur Mesure</h5>
-                        <p>Solutions adaptées à vos besoins</p>
-                    </div>
-                </div>
-                
-                <div class="promise-box">
-                    <i class="bi bi-star-fill"></i>
-                    <h4>🎯 NOTRE PROMESSE :</h4>
-                    <p class="mb-0">« De votre ordinateur à votre application web, nous gérons tout votre écosystème digital ! »</p>
-                </div>
-                
-                <div class="contact-info">
-                    <h5 class="text-center mb-3" style="color: var(--primary-blue);"><i class="bi bi-telephone-fill"></i> Nos Contacts</h5>
-                    <div class="contact-item">
-                        <i class="bi bi-whatsapp"></i>
-                        <span><strong>Téléphone :</strong> <a href="tel:+243895051472">+243 895 051 472</a> / <a href="tel:+243971877758">+243 971 877 758</a></span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="bi bi-envelope-fill"></i>
-                        <span><strong>Email :</strong> <a href="mailto:hybrilink@gmail.com">hybrilink@gmail.com</a></span>
-                    </div>
-                    <div class="contact-item">
-                        <i class="bi bi-globe"></i>
-                        <span><strong>Site web :</strong> <a href="https://hybrilinktech-tech.github.io/ht/" target="_blank">https://hybrilinktech-tech.github.io/ht/</a></span>
-                    </div>
-                    <div class="text-center mt-4">
-                        <a href="https://hybrilinktech-tech.github.io/ht/" target="_blank" class="website-btn">
-                            <i class="bi bi-box-arrow-up-right"></i> Visiter notre site
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
     <div id="profileModal" style="display:none;">
         <div class="profile-modal">
             <div class="profile-modal-content">
@@ -1139,11 +892,6 @@
         </div>
         <button id="installBtn">Installer</button>
         <button onclick="document.getElementById('installBanner').style.display='none'" style="background: none; color: white; font-size: 20px;">&times;</button>
-    </div>
-    
-    <div class="info-text">
-        <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire de A à Z<br>
-        <img src="t.png" width="50px" style="border-radius: 30px;" alt="HYBRILINK">
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1499,6 +1247,7 @@
         
         function updateTotal() { const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0); document.getElementById('totalAmount').innerHTML = `${total.toLocaleString()} Fc`; }
         
+        // Fonction pour générer un exemplaire de reçu avec filigrane th.png centré et flou
         function genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, exemplaireNum) {
             const date = new Date().toLocaleDateString('fr-FR');
             const fichesNoms = fiches.map(f => f.nom || 'Fiche').join(', ');
@@ -1652,77 +1401,144 @@
             };
         }
         
-        async function validerPaiement() {
-            if (!currentStudent) { showToast('Veuillez sélectionner un étudiant', 'warning'); return; }
-            if (selectedFiches.length === 0) { showToast('Veuillez sélectionner au moins une fiche', 'warning'); return; }
-            const anneeId = document.getElementById('anneeAcademiqueSelect').value;
-            if (!anneeId) { showToast('Veuillez sélectionner l\'année académique', 'warning'); return; }
-            
-            for (const fiche of selectedFiches) {
-                if (studentPaidFiches.includes(fiche.id)) {
-                    showToast(`La fiche "${allFiches.find(f => f.id === fiche.id)?.nom}" a déjà été payée cette année`, 'error');
-                    return;
-                }
+        // Remplacer la fonction validerPaiement existante par celle-ci
+async function validerPaiement() {
+    if (!currentStudent) { showToast('Veuillez sélectionner un étudiant', 'warning'); return; }
+    if (selectedFiches.length === 0) { showToast('Veuillez sélectionner au moins une fiche', 'warning'); return; }
+    const anneeId = document.getElementById('anneeAcademiqueSelect').value;
+    if (!anneeId) { showToast('Veuillez sélectionner l\'année académique', 'warning'); return; }
+    
+    for (const fiche of selectedFiches) {
+        if (studentPaidFiches.includes(fiche.id)) {
+            showToast(`La fiche "${allFiches.find(f => f.id === fiche.id)?.nom}" a déjà été payée cette année`, 'error');
+            return;
+        }
+    }
+    
+    const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0);
+    let numeroReçu = genererNumeroReçu();
+    const anneeNom = allAnnees.find(a => a.id === anneeId)?.annee || '-';
+    const promoNom = getPromotionNom(currentStudent.promotion);
+    const fichesDetails = selectedFiches.map(f => ({ id: f.id, ...allFiches.find(fiche => fiche.id === f.id), prix: f.prix }));
+    const montantLettres = numberToWords(total);
+    
+    const transaction = {
+        id: numeroReçu,
+        numeroRecu: numeroReçu,
+        etudiantId: currentStudent.id,
+        etudiantNom: currentStudent.nomComplet,
+        etudiantMatricule: currentStudent.id,
+        promotion: currentStudent.promotion,
+        promotionNom: promoNom,
+        anneeAcademiqueId: anneeId,
+        anneeAcademiqueNom: anneeNom,
+        fiches: fichesDetails,
+        montantTotal: total,
+        montantLettres: montantLettres,
+        date: firebase.firestore.FieldValue.serverTimestamp(),
+        comptable: utilisateurActuel.nomComplet,
+        comptableId: utilisateurActuel.id
+    };
+    
+    const btn = document.getElementById('validerPaiementBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement...';
+    btn.disabled = true;
+    
+    try {
+        await db.collection('transactions').doc(numeroReçu).set(transaction);
+        
+        // ENVOYER LA NOTIFICATION AU DOYEN
+        await envoyerNotificationDoyen(transaction);
+        
+        showToast('Paiement enregistré, impression en cours...', 'success');
+        
+        imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
+        
+        selectedFiches = [];
+        updateTotal();
+        document.getElementById('fichesContainer').style.display = 'none';
+        document.getElementById('studentInfo').style.display = 'none';
+        document.getElementById('searchEtudiant').value = '';
+        currentStudent = null;
+        studentPaidFiches = [];
+        
+        showToast('Paiement effectué avec succès !', 'success');
+        mettreAJourStatsHeader();
+    } catch (error) { 
+        showToast('Erreur lors du paiement: ' + error.message, 'error');
+        console.error(error);
+    }
+    finally { 
+        btn.innerHTML = originalText; 
+        btn.disabled = false; 
+    }
+}
+
+// Nouvelle fonction pour envoyer la notification au doyen
+async function envoyerNotificationDoyen(transaction) {
+    try {
+        // Récupérer tous les tokens des doyens
+        const tokensSnapshot = await db.collection('fcmTokens')
+            .where('userRole', '==', 'doyen')
+            .get();
+        
+        const tokens = [];
+        tokensSnapshot.forEach(doc => {
+            if (doc.data().token) {
+                tokens.push(doc.data().token);
             }
-            
-            const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0);
-            let numeroReçu = genererNumeroReçu();
-            const anneeNom = allAnnees.find(a => a.id === anneeId)?.annee || '-';
-            const promoNom = getPromotionNom(currentStudent.promotion);
-            const fichesDetails = selectedFiches.map(f => ({ id: f.id, ...allFiches.find(fiche => fiche.id === f.id), prix: f.prix }));
-            const montantLettres = numberToWords(total);
-            
-            const transaction = {
-                id: numeroReçu,
-                numeroRecu: numeroReçu,
-                etudiantId: currentStudent.id,
-                etudiantNom: currentStudent.nomComplet,
-                etudiantMatricule: currentStudent.id,
-                promotion: currentStudent.promotion,
-                promotionNom: promoNom,
-                anneeAcademiqueId: anneeId,
-                anneeAcademiqueNom: anneeNom,
-                fiches: fichesDetails,
-                montantTotal: total,
-                montantLettres: montantLettres,
-                date: firebase.firestore.FieldValue.serverTimestamp(),
-                comptable: utilisateurActuel.nomComplet,
-                comptableId: utilisateurActuel.id
-            };
-            
-            const btn = document.getElementById('validerPaiementBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement...';
-            btn.disabled = true;
-            
-            try {
-                await db.collection('transactions').doc(numeroReçu).set(transaction);
-                
-                showToast('Paiement enregistré, impression en cours...', 'success');
-                
-                imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
-                
-                selectedFiches = [];
-                updateTotal();
-                document.getElementById('fichesContainer').style.display = 'none';
-                document.getElementById('studentInfo').style.display = 'none';
-                document.getElementById('searchEtudiant').value = '';
-                currentStudent = null;
-                studentPaidFiches = [];
-                
-                showToast('Paiement effectué avec succès !', 'success');
-                mettreAJourStatsHeader();
-            } catch (error) { 
-                showToast('Erreur lors du paiement: ' + error.message, 'error');
-                console.error(error);
-            }
-            finally { 
-                btn.innerHTML = originalText; 
-                btn.disabled = false; 
-            }
+        });
+        
+        if (tokens.length === 0) {
+            console.log('Aucun token doyen trouvé');
+            return;
         }
         
-        document.getElementById('validerPaiementBtn') && (document.getElementById('validerPaiementBtn').onclick = validerPaiement);
+        // Préparer le message
+        const message = {
+            notification: {
+                title: '💰 Nouveau paiement enregistré',
+                body: `${transaction.etudiantNom} - ${transaction.montantTotal.toLocaleString()} FC pour ${transaction.fiches.map(f => f.nom).join(', ')}`,
+                icon: '/icon-192x192.png',
+                badge: '/icon-96x96.png',
+                vibrate: [200, 100, 200],
+                sound: 'default',
+                click_action: '/'
+            },
+            data: {
+                transactionId: transaction.id,
+                etudiantNom: transaction.etudiantNom,
+                montant: transaction.montantTotal.toString(),
+                date: new Date().toISOString(),
+                url: '/'
+            },
+            tokens: tokens
+        };
+        
+        // Utiliser l'API FCM pour envoyer la notification
+        // Note: Cette partie nécessite un serveur backend ou Firebase Cloud Functions
+        // Pour une solution sans backend, on peut utiliser un webhook ou stocker dans Firestore
+        
+        // Alternative: Stocker dans Firestore et utiliser un déclencheur Cloud Function
+        await db.collection('notifications').add({
+            type: 'nouveau_paiement',
+            transactionId: transaction.id,
+            etudiantNom: transaction.etudiantNom,
+            montant: transaction.montantTotal,
+            fiches: transaction.fiches.map(f => f.nom),
+            comptable: transaction.comptable,
+            date: firebase.firestore.FieldValue.serverTimestamp(),
+            lu: false,
+            destinataire: 'doyen'
+        });
+        
+        console.log('Notification stockée dans Firestore');
+        
+    } catch (error) {
+        console.error('Erreur envoi notification:', error);
+    }
+} 
         
         async function genererRapport() {
             const anneeId = document.getElementById('rapportAnneeSelect').value;
@@ -1786,5 +1602,121 @@
         window.toggleFicheDirect = toggleFicheDirect;
         window.toggleFicheCheckbox = toggleFicheCheckbox;
     </script>
+<script>
+// À ajouter dans comptabilite.html, après l'initialisation Firebase
+
+// ========== NOTIFICATIONS PUSH ==========
+let messaging = null;
+let isNotificationSupported = false;
+
+// Vérifier le support des notifications
+if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+    isNotificationSupported = true;
+    console.log('Notifications push supportées');
+}
+
+// Initialiser Firebase Messaging
+async function initFirebaseMessaging() {
+    if (!isNotificationSupported) {
+        console.log('Notifications non supportées');
+        return;
+    }
+    
+    try {
+        // Demander la permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('Permission notifications refusée');
+            return;
+        }
+        
+        // Initialiser messaging
+        messaging = firebase.messaging();
+        
+        // Obtenir le token FCM
+        const token = await messaging.getToken({
+            vapidKey: 'BNDQ5l-Vf4yBzUl6wAZ0gBurHoJQG78zf173r-jsOderVcWBor0LjEsqzr11FegBTpRH-O-pb7xXzSTO00xMRP0'
+        });
+        
+        console.log('Token FCM:', token);
+        
+        // Sauvegarder le token dans Firestore
+        const userEmail = utilisateurActuel?.email || 'unknown';
+        await db.collection('fcmTokens').doc(userEmail).set({
+            token: token,
+            userId: utilisateurActuel?.id,
+            userEmail: userEmail,
+            userRole: 'comptabilite',
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+            deviceInfo: navigator.userAgent
+        }, { merge: true });
+        
+        console.log('Token FCM enregistré');
+        
+        // Écouter les messages en premier plan
+        messaging.onMessage((payload) => {
+            console.log('Message reçu en premier plan:', payload);
+            
+            // Afficher une notification même en premier plan
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(payload.notification?.title || 'Nouveau paiement', {
+                    body: payload.notification?.body || 'Un paiement vient d\'être effectué',
+                    icon: '/icon-192x192.png',
+                    badge: '/icon-96x96.png',
+                    vibrate: [200, 100, 200],
+                    requireInteraction: true
+                });
+                
+                notification.onclick = function() {
+                    notification.close();
+                    // Rafraîchir le rapport si ouvert
+                    if (document.getElementById('pageRapport')?.classList.contains('active')) {
+                        genererRapport();
+                    }
+                };
+            }
+            
+            // Afficher un toast
+            showToast(payload.notification?.body || 'Nouveau paiement enregistré!', 'success');
+            
+            // Rafraîchir les données
+            mettreAJourStatsHeader();
+            if (document.getElementById('pageRapport')?.classList.contains('active')) {
+                genererRapport();
+            }
+        });
+        
+    } catch (error) {
+        console.error('Erreur initialisation FCM:', error);
+    }
+}
+
+// Mettre à jour le token périodiquement
+async function refreshFCMToken() {
+    if (!messaging) return;
+    
+    try {
+        const token = await messaging.getToken();
+        if (token) {
+            await db.collection('fcmTokens').doc(utilisateurActuel?.email).update({
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    } catch (error) {
+        console.error('Erreur refresh token:', error);
+    }
+}
+
+// Rafraîchir le token toutes les 12 heures
+setInterval(refreshFCMToken, 12 * 60 * 60 * 1000);
+
+// Initialiser les notifications au chargement
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFirebaseMessaging);
+} else {
+    initFirebaseMessaging();
+}
+
+</script>
 </body>
 </html>
