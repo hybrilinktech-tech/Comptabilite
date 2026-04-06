@@ -1401,144 +1401,77 @@
             };
         }
         
-        // Remplacer la fonction validerPaiement existante par celle-ci
-async function validerPaiement() {
-    if (!currentStudent) { showToast('Veuillez sélectionner un étudiant', 'warning'); return; }
-    if (selectedFiches.length === 0) { showToast('Veuillez sélectionner au moins une fiche', 'warning'); return; }
-    const anneeId = document.getElementById('anneeAcademiqueSelect').value;
-    if (!anneeId) { showToast('Veuillez sélectionner l\'année académique', 'warning'); return; }
-    
-    for (const fiche of selectedFiches) {
-        if (studentPaidFiches.includes(fiche.id)) {
-            showToast(`La fiche "${allFiches.find(f => f.id === fiche.id)?.nom}" a déjà été payée cette année`, 'error');
-            return;
-        }
-    }
-    
-    const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0);
-    let numeroReçu = genererNumeroReçu();
-    const anneeNom = allAnnees.find(a => a.id === anneeId)?.annee || '-';
-    const promoNom = getPromotionNom(currentStudent.promotion);
-    const fichesDetails = selectedFiches.map(f => ({ id: f.id, ...allFiches.find(fiche => fiche.id === f.id), prix: f.prix }));
-    const montantLettres = numberToWords(total);
-    
-    const transaction = {
-        id: numeroReçu,
-        numeroRecu: numeroReçu,
-        etudiantId: currentStudent.id,
-        etudiantNom: currentStudent.nomComplet,
-        etudiantMatricule: currentStudent.id,
-        promotion: currentStudent.promotion,
-        promotionNom: promoNom,
-        anneeAcademiqueId: anneeId,
-        anneeAcademiqueNom: anneeNom,
-        fiches: fichesDetails,
-        montantTotal: total,
-        montantLettres: montantLettres,
-        date: firebase.firestore.FieldValue.serverTimestamp(),
-        comptable: utilisateurActuel.nomComplet,
-        comptableId: utilisateurActuel.id
-    };
-    
-    const btn = document.getElementById('validerPaiementBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement...';
-    btn.disabled = true;
-    
-    try {
-        await db.collection('transactions').doc(numeroReçu).set(transaction);
-        
-        // ENVOYER LA NOTIFICATION AU DOYEN
-        await envoyerNotificationDoyen(transaction);
-        
-        showToast('Paiement enregistré, impression en cours...', 'success');
-        
-        imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
-        
-        selectedFiches = [];
-        updateTotal();
-        document.getElementById('fichesContainer').style.display = 'none';
-        document.getElementById('studentInfo').style.display = 'none';
-        document.getElementById('searchEtudiant').value = '';
-        currentStudent = null;
-        studentPaidFiches = [];
-        
-        showToast('Paiement effectué avec succès !', 'success');
-        mettreAJourStatsHeader();
-    } catch (error) { 
-        showToast('Erreur lors du paiement: ' + error.message, 'error');
-        console.error(error);
-    }
-    finally { 
-        btn.innerHTML = originalText; 
-        btn.disabled = false; 
-    }
-}
-
-// Nouvelle fonction pour envoyer la notification au doyen
-async function envoyerNotificationDoyen(transaction) {
-    try {
-        // Récupérer tous les tokens des doyens
-        const tokensSnapshot = await db.collection('fcmTokens')
-            .where('userRole', '==', 'doyen')
-            .get();
-        
-        const tokens = [];
-        tokensSnapshot.forEach(doc => {
-            if (doc.data().token) {
-                tokens.push(doc.data().token);
+        async function validerPaiement() {
+            if (!currentStudent) { showToast('Veuillez sélectionner un étudiant', 'warning'); return; }
+            if (selectedFiches.length === 0) { showToast('Veuillez sélectionner au moins une fiche', 'warning'); return; }
+            const anneeId = document.getElementById('anneeAcademiqueSelect').value;
+            if (!anneeId) { showToast('Veuillez sélectionner l\'année académique', 'warning'); return; }
+            
+            for (const fiche of selectedFiches) {
+                if (studentPaidFiches.includes(fiche.id)) {
+                    showToast(`La fiche "${allFiches.find(f => f.id === fiche.id)?.nom}" a déjà été payée cette année`, 'error');
+                    return;
+                }
             }
-        });
-        
-        if (tokens.length === 0) {
-            console.log('Aucun token doyen trouvé');
-            return;
+            
+            const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0);
+            let numeroReçu = genererNumeroReçu();
+            const anneeNom = allAnnees.find(a => a.id === anneeId)?.annee || '-';
+            const promoNom = getPromotionNom(currentStudent.promotion);
+            const fichesDetails = selectedFiches.map(f => ({ id: f.id, ...allFiches.find(fiche => fiche.id === f.id), prix: f.prix }));
+            const montantLettres = numberToWords(total);
+            
+            const transaction = {
+                id: numeroReçu,
+                numeroRecu: numeroReçu,
+                etudiantId: currentStudent.id,
+                etudiantNom: currentStudent.nomComplet,
+                etudiantMatricule: currentStudent.id,
+                promotion: currentStudent.promotion,
+                promotionNom: promoNom,
+                anneeAcademiqueId: anneeId,
+                anneeAcademiqueNom: anneeNom,
+                fiches: fichesDetails,
+                montantTotal: total,
+                montantLettres: montantLettres,
+                date: firebase.firestore.FieldValue.serverTimestamp(),
+                comptable: utilisateurActuel.nomComplet,
+                comptableId: utilisateurActuel.id
+            };
+            
+            const btn = document.getElementById('validerPaiementBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Traitement...';
+            btn.disabled = true;
+            
+            try {
+                await db.collection('transactions').doc(numeroReçu).set(transaction);
+                
+                showToast('Paiement enregistré, impression en cours...', 'success');
+                
+                imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
+                
+                selectedFiches = [];
+                updateTotal();
+                document.getElementById('fichesContainer').style.display = 'none';
+                document.getElementById('studentInfo').style.display = 'none';
+                document.getElementById('searchEtudiant').value = '';
+                currentStudent = null;
+                studentPaidFiches = [];
+                
+                showToast('Paiement effectué avec succès !', 'success');
+                mettreAJourStatsHeader();
+            } catch (error) { 
+                showToast('Erreur lors du paiement: ' + error.message, 'error');
+                console.error(error);
+            }
+            finally { 
+                btn.innerHTML = originalText; 
+                btn.disabled = false; 
+            }
         }
         
-        // Préparer le message
-        const message = {
-            notification: {
-                title: '💰 Nouveau paiement enregistré',
-                body: `${transaction.etudiantNom} - ${transaction.montantTotal.toLocaleString()} FC pour ${transaction.fiches.map(f => f.nom).join(', ')}`,
-                icon: '/icon-192x192.png',
-                badge: '/icon-96x96.png',
-                vibrate: [200, 100, 200],
-                sound: 'default',
-                click_action: '/'
-            },
-            data: {
-                transactionId: transaction.id,
-                etudiantNom: transaction.etudiantNom,
-                montant: transaction.montantTotal.toString(),
-                date: new Date().toISOString(),
-                url: '/'
-            },
-            tokens: tokens
-        };
-        
-        // Utiliser l'API FCM pour envoyer la notification
-        // Note: Cette partie nécessite un serveur backend ou Firebase Cloud Functions
-        // Pour une solution sans backend, on peut utiliser un webhook ou stocker dans Firestore
-        
-        // Alternative: Stocker dans Firestore et utiliser un déclencheur Cloud Function
-        await db.collection('notifications').add({
-            type: 'nouveau_paiement',
-            transactionId: transaction.id,
-            etudiantNom: transaction.etudiantNom,
-            montant: transaction.montantTotal,
-            fiches: transaction.fiches.map(f => f.nom),
-            comptable: transaction.comptable,
-            date: firebase.firestore.FieldValue.serverTimestamp(),
-            lu: false,
-            destinataire: 'doyen'
-        });
-        
-        console.log('Notification stockée dans Firestore');
-        
-    } catch (error) {
-        console.error('Erreur envoi notification:', error);
-    }
-} 
+        document.getElementById('validerPaiementBtn') && (document.getElementById('validerPaiementBtn').onclick = validerPaiement);
         
         async function genererRapport() {
             const anneeId = document.getElementById('rapportAnneeSelect').value;
@@ -1602,121 +1535,5 @@ async function envoyerNotificationDoyen(transaction) {
         window.toggleFicheDirect = toggleFicheDirect;
         window.toggleFicheCheckbox = toggleFicheCheckbox;
     </script>
-<script>
-// À ajouter dans comptabilite.html, après l'initialisation Firebase
-
-// ========== NOTIFICATIONS PUSH ==========
-let messaging = null;
-let isNotificationSupported = false;
-
-// Vérifier le support des notifications
-if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
-    isNotificationSupported = true;
-    console.log('Notifications push supportées');
-}
-
-// Initialiser Firebase Messaging
-async function initFirebaseMessaging() {
-    if (!isNotificationSupported) {
-        console.log('Notifications non supportées');
-        return;
-    }
-    
-    try {
-        // Demander la permission
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-            console.log('Permission notifications refusée');
-            return;
-        }
-        
-        // Initialiser messaging
-        messaging = firebase.messaging();
-        
-        // Obtenir le token FCM
-        const token = await messaging.getToken({
-            vapidKey: 'BNDQ5l-Vf4yBzUl6wAZ0gBurHoJQG78zf173r-jsOderVcWBor0LjEsqzr11FegBTpRH-O-pb7xXzSTO00xMRP0'
-        });
-        
-        console.log('Token FCM:', token);
-        
-        // Sauvegarder le token dans Firestore
-        const userEmail = utilisateurActuel?.email || 'unknown';
-        await db.collection('fcmTokens').doc(userEmail).set({
-            token: token,
-            userId: utilisateurActuel?.id,
-            userEmail: userEmail,
-            userRole: 'comptabilite',
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-            deviceInfo: navigator.userAgent
-        }, { merge: true });
-        
-        console.log('Token FCM enregistré');
-        
-        // Écouter les messages en premier plan
-        messaging.onMessage((payload) => {
-            console.log('Message reçu en premier plan:', payload);
-            
-            // Afficher une notification même en premier plan
-            if (Notification.permission === 'granted') {
-                const notification = new Notification(payload.notification?.title || 'Nouveau paiement', {
-                    body: payload.notification?.body || 'Un paiement vient d\'être effectué',
-                    icon: '/icon-192x192.png',
-                    badge: '/icon-96x96.png',
-                    vibrate: [200, 100, 200],
-                    requireInteraction: true
-                });
-                
-                notification.onclick = function() {
-                    notification.close();
-                    // Rafraîchir le rapport si ouvert
-                    if (document.getElementById('pageRapport')?.classList.contains('active')) {
-                        genererRapport();
-                    }
-                };
-            }
-            
-            // Afficher un toast
-            showToast(payload.notification?.body || 'Nouveau paiement enregistré!', 'success');
-            
-            // Rafraîchir les données
-            mettreAJourStatsHeader();
-            if (document.getElementById('pageRapport')?.classList.contains('active')) {
-                genererRapport();
-            }
-        });
-        
-    } catch (error) {
-        console.error('Erreur initialisation FCM:', error);
-    }
-}
-
-// Mettre à jour le token périodiquement
-async function refreshFCMToken() {
-    if (!messaging) return;
-    
-    try {
-        const token = await messaging.getToken();
-        if (token) {
-            await db.collection('fcmTokens').doc(utilisateurActuel?.email).update({
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-    } catch (error) {
-        console.error('Erreur refresh token:', error);
-    }
-}
-
-// Rafraîchir le token toutes les 12 heures
-setInterval(refreshFCMToken, 12 * 60 * 60 * 1000);
-
-// Initialiser les notifications au chargement
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFirebaseMessaging);
-} else {
-    initFirebaseMessaging();
-}
-
-</script>
 </body>
-</html>
+</html> 
