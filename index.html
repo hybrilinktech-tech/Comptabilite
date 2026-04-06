@@ -533,6 +533,8 @@
                 page-break-inside: avoid;
                 margin-bottom: 30px;
                 border: 1px solid #000;
+                position: relative;
+                overflow: hidden;
             }
             @page {
                 size: A4;
@@ -547,6 +549,37 @@
             margin-bottom: 30px;
             background: white;
             font-family: 'Times New Roman', serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Style du filigrane flou centré */
+        .receipt-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 35%;
+            height: auto;
+            opacity: 0.15;
+            filter: blur(4px);
+            pointer-events: none;
+            z-index: 0;
+            text-align: center;
+        }
+        
+        .receipt-watermark img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-width: 200px;
+            margin: 0 auto;
+        }
+        
+        .receipt-content {
+            position: relative;
+            z-index: 1;
+            background: transparent;
         }
         
         .receipt-header {
@@ -643,6 +676,10 @@
             width: 60px;
             height: 60px;
             object-fit: contain;
+        }
+        
+        .receipt-logo-text {
+            text-align: center;
         }
     </style>
 </head>
@@ -1165,7 +1202,6 @@
                 fichesListDiv.innerHTML = fichesPromo.map(fiche => {
                     const isPaid = studentPaidFiches.includes(fiche.id);
                     const paidClass = isPaid ? 'fiche-paid' : '';
-                    const disabledAttr = isPaid ? 'disabled' : '';
                     return `
                         <div class="fiche-item ${paidClass}" data-id="${fiche.id}" data-prix="${fiche.montant || 0}" onclick="${!isPaid ? `toggleFicheDirect('${fiche.id}', ${fiche.montant || 0})` : ''}">
                             <div><strong>${escapeHtml(fiche.nom)}</strong><br><small>${escapeHtml(fiche.description || '')}</small></div>
@@ -1211,68 +1247,17 @@
         
         function updateTotal() { const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0); document.getElementById('totalAmount').innerHTML = `${total.toLocaleString()} Fc`; }
         
-        function imprimerReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu) {
+        // Fonction pour générer un exemplaire de reçu avec filigrane th.png centré et flou
+        function genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, exemplaireNum) {
             const date = new Date().toLocaleDateString('fr-FR');
             const fichesNoms = fiches.map(f => f.nom || 'Fiche').join(', ');
             
-            const receiptHTML = `
-                <div class="print-area" id="printArea">
-                    <div class="receipt-exemplaire">
-                        <div class="receipt-logo">
-                            <div class="receipt-logo-left">
-                                <img src="th.png" alt="Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 24 24\' fill=\'%23003366\'%3E%3Cpath d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/%3E%3C/svg%3E'">
-                            </div>
-                            <div class="receipt-logo-text">
-                                <h2>UNIVERSITÉ DE LUBUMBASHI</h2>
-                                <h3>ADMINISTRATION DU BUDGET</h3>
-                                <p>FACULTÉ D'AGRONOMIE</p>
-                            </div>
-                            <div style="width: 60px;"></div>
-                        </div>
-                        <div class="receipt-number">
-                            N° ${numeroReçu}
-                        </div>
-                        <div class="receipt-body">
-                            <div class="receipt-line">
-                                <span class="receipt-label">N° Reçu de l'étudiant(e) :</span>
-                                <span class="receipt-value">${escapeHtml(transaction.etudiantNom)}</span>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Promotion :</span>
-                                <span class="receipt-value">${escapeHtml(promoNom)}</span>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Matricule :</span>
-                                <span class="receipt-value">${escapeHtml(transaction.etudiantMatricule)}</span>
-                            </div>
-                            <div class="receipt-amount">
-                                <div>La somme de (En chiffres)</div>
-                                <div class="receipt-amount-number">${total.toLocaleString()} FC</div>
-                                <div>(En lettres)</div>
-                                <div class="receipt-amount-letters">${montantLettres}</div>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Motif :</span>
-                                <span class="receipt-value">Paiement des frais : ${fichesNoms}</span>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Année académique :</span>
-                                <span class="receipt-value">${annee}</span>
-                            </div>
-                        </div>
-                        <div class="receipt-footer">
-                            <div>Fait à Lubumbashi, le ${date}</div>
-                            <div>Signature de l'AB</div>
-                        </div>
-                        <div class="receipt-signature">
-                            <div style="display: flex; justify-content: space-between;">
-                                <div>SCIENTIA SPLENDET ET CONSCIENTIA</div>
-                                <div>${escapeHtml(utilisateurActuel.nomComplet)}<br><small>(Signature manuelle)</small></div>
-                            </div>
-                        </div>
+            return `
+                <div class="receipt-exemplaire" style="position: relative; overflow: hidden;">
+                    <div class="receipt-watermark">
+                        <img src="th.png" alt="Logo" style="width: 100%; height: auto; max-width: 180px; display: block; margin: 0 auto;" onerror="this.style.display='none'">
                     </div>
-                    
-                    <div class="receipt-exemplaire">
+                    <div class="receipt-content">
                         <div class="receipt-logo">
                             <div class="receipt-logo-left">
                                 <img src="th.png" alt="Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 24 24\' fill=\'%23003366\'%3E%3Cpath d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/%3E%3C/svg%3E'">
@@ -1285,7 +1270,7 @@
                             <div style="width: 60px;"></div>
                         </div>
                         <div class="receipt-number">
-                            N° ${numeroReçu}
+                            N° ${numeroReçu} - Exemplaire ${exemplaireNum}
                         </div>
                         <div class="receipt-body">
                             <div class="receipt-line">
@@ -1328,19 +1313,58 @@
                     </div>
                 </div>
             `;
+        }
+        
+        function imprimerReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu) {
+            const exemplaire1 = genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, 1);
+            const exemplaire2 = genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, 2);
+            
+            const receiptHTML = `
+                <div class="print-area" id="printArea">
+                    ${exemplaire1}
+                    ${exemplaire2}
+                </div>
+            `;
             
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`<html><head><title>Reçu de paiement - ${numeroReçu}</title><style>
                 * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: 'Times New Roman', serif; padding: 20px; }
+                body { font-family: 'Times New Roman', serif; padding: 20px; background: white; }
                 .receipt-exemplaire { 
                     border: 1px solid #000; 
                     border-radius: 5px; 
                     padding: 20px; 
                     margin-bottom: 30px; 
                     background: white;
+                    position: relative;
+                    overflow: hidden;
                     page-break-after: avoid;
                     page-break-inside: avoid;
+                }
+                .receipt-watermark {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 35%;
+                    height: auto;
+                    opacity: 0.15;
+                    filter: blur(4px);
+                    pointer-events: none;
+                    z-index: 0;
+                    text-align: center;
+                }
+                .receipt-watermark img {
+                    width: 100%;
+                    height: auto;
+                    max-width: 180px;
+                    display: block;
+                    margin: 0 auto;
+                }
+                .receipt-content {
+                    position: relative;
+                    z-index: 1;
+                    background: transparent;
                 }
                 .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
                 .receipt-header h2 { font-size: 16px; margin: 0; text-transform: uppercase; }
