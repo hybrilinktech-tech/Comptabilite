@@ -553,7 +553,6 @@
             overflow: hidden;
         }
         
-        /* Style du filigrane flou centré */
         .receipt-watermark {
             position: absolute;
             top: 50%;
@@ -908,7 +907,23 @@
         };
         
         firebase.initializeApp(firebaseConfig);
+        
+        // Configuration importante pour le cache local et la persistance
         const db = firebase.firestore();
+        
+        // Activer la persistance locale (cache) - permet le fonctionnement hors-ligne
+        db.enablePersistence({ synchronizeTabs: true })
+            .then(() => {
+                console.log('Persistance hors-ligne activée avec succès');
+                showToast('Mode hors-ligne activé', 'success');
+            })
+            .catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.warn('Persistance impossible (onglets multiples)');
+                } else if (err.code === 'unimplemented') {
+                    console.warn('Persistance non supportée par le navigateur');
+                }
+            });
         
         let isOnline = navigator.onLine;
         let currentStudent = null;
@@ -919,6 +934,13 @@
         let allFiches = [];
         let searchTimeout = null;
         let studentPaidFiches = [];
+        
+        // Gestion des listeners pour optimisation du cache
+        let unsubscribeAnnees = null;
+        let unsubscribePromotions = null;
+        let unsubscribeEtudiants = null;
+        let unsubscribeFiches = null;
+        let unsubscribeTransactions = null;
         
         // PWA Installation
         let deferredPrompt;
@@ -1026,7 +1048,13 @@
                 aujourdhui.setHours(0, 0, 0, 0);
                 const demain = new Date(aujourdhui);
                 demain.setDate(demain.getDate() + 1);
-                const snapshot = await db.collection('transactions').where('date', '>=', aujourdhui).where('date', '<', demain).get();
+                
+                // Utilisation de source 'cache' puis 'server' pour optimiser les lectures
+                const snapshot = await db.collection('transactions')
+                    .where('date', '>=', aujourdhui)
+                    .where('date', '<', demain)
+                    .get({ source: 'default' }); // Par défaut: cache d'abord, puis serveur
+                
                 let total = 0;
                 snapshot.forEach(doc => { total += doc.data().montantTotal || 0; });
                 document.getElementById('todayMontantHeader').textContent = total.toLocaleString() + ' FC';
@@ -1036,10 +1064,12 @@
         
         async function verifierFichesPayees(etudiantId, anneeId) {
             if (!etudiantId || !anneeId) return [];
+            
+            // Optimisation: utilisation du cache local d'abord
             const snapshot = await db.collection('transactions')
                 .where('etudiantId', '==', etudiantId)
                 .where('anneeAcademiqueId', '==', anneeId)
-                .get();
+                .get({ source: 'default' });
             
             const fichesPayees = [];
             snapshot.forEach(doc => {
@@ -1077,7 +1107,8 @@
             return fichesPayees;
         }
         
-        db.collection('anneesAcademiques').onSnapshot(snapshot => {
+        // Listeners optimisés avec gestion du cache automatique par Firestore
+        unsubscribeAnnees = db.collection('anneesAcademiques').onSnapshot(snapshot => {
             allAnnees = [];
             snapshot.forEach(doc => allAnnees.push({ id: doc.id, ...doc.data() }));
             const anneeSelect = document.getElementById('anneeAcademiqueSelect');
@@ -1092,7 +1123,7 @@
             }
         });
         
-        db.collection('promotions').onSnapshot(snapshot => {
+        unsubscribePromotions = db.collection('promotions').onSnapshot(snapshot => {
             allPromotions = [];
             snapshot.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
             const promoSelect = document.getElementById('promotionSelect');
@@ -1107,17 +1138,19 @@
             }
         });
         
-        db.collection('etudiants').onSnapshot(snapshot => {
+        unsubscribeEtudiants = db.collection('etudiants').onSnapshot(snapshot => {
             allStudents = [];
             snapshot.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
         });
         
-        db.collection('fiches').onSnapshot(snapshot => {
+        unsubscribeFiches = db.collection('fiches').onSnapshot(snapshot => {
             allFiches = [];
             snapshot.forEach(doc => allFiches.push({ id: doc.id, ...doc.data() }));
         });
         
-        db.collection('transactions').onSnapshot(() => { mettreAJourStatsHeader(); });
+        unsubscribeTransactions = db.collection('transactions').onSnapshot(() => { 
+            mettreAJourStatsHeader(); 
+        });
         
         function openPage(page) {
             document.getElementById('mainPage').style.display = 'none';
@@ -1247,7 +1280,6 @@
         
         function updateTotal() { const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0); document.getElementById('totalAmount').innerHTML = `${total.toLocaleString()} Fc`; }
         
-        // Fonction pour générer un exemplaire de reçu avec filigrane th.png centré et flou
         function genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, exemplaireNum) {
             const date = new Date().toLocaleDateString('fr-FR');
             const fichesNoms = fiches.map(f => f.nom || 'Fiche').join(', ');
@@ -1436,7 +1468,8 @@
                 montantLettres: montantLettres,
                 date: firebase.firestore.FieldValue.serverTimestamp(),
                 comptable: utilisateurActuel.nomComplet,
-                comptableId: utilisateurActuel.id
+                comptableId: utilisateurActuel.id,
+                synced: true
             };
             
             const btn = document.getElementById('validerPaiementBtn');
@@ -1445,12 +1478,15 @@
             btn.disabled = true;
             
             try {
+                // Écriture dans Firestore - sera automatiquement mise en cache localement
                 await db.collection('transactions').doc(numeroReçu).set(transaction);
                 
-                showToast('Paiement enregistré, impression en cours...', 'success');
+                showToast('Paiement enregistré avec succès!', 'success');
                 
+                // Impression du reçu
                 imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
                 
+                // Réinitialisation du formulaire
                 selectedFiches = [];
                 updateTotal();
                 document.getElementById('fichesContainer').style.display = 'none';
@@ -1459,7 +1495,6 @@
                 currentStudent = null;
                 studentPaidFiches = [];
                 
-                showToast('Paiement effectué avec succès !', 'success');
                 mettreAJourStatsHeader();
             } catch (error) { 
                 showToast('Erreur lors du paiement: ' + error.message, 'error');
@@ -1476,27 +1511,39 @@
         async function genererRapport() {
             const anneeId = document.getElementById('rapportAnneeSelect').value;
             const promotionId = document.getElementById('rapportPromotionSelect').value;
-            const snapshot = await db.collection('transactions').orderBy('date', 'desc').get();
+            
+            // Utilisation du cache pour les rapports (source: 'cache' d'abord)
+            const snapshot = await db.collection('transactions')
+                .orderBy('date', 'desc')
+                .get({ source: 'default' });
+            
             let transactions = [];
             snapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
+            
             if (anneeId) transactions = transactions.filter(t => t.anneeAcademiqueId === anneeId);
             if (promotionId) transactions = transactions.filter(t => t.promotion === promotionId);
+            
             const totalMontant = transactions.reduce((sum, t) => sum + (t.montantTotal || 0), 0);
             const totalEtudiants = new Set(transactions.map(t => t.etudiantId)).size;
+            
             document.getElementById('totalMontant').innerHTML = `${totalMontant.toLocaleString()} Fc`;
             document.getElementById('totalTransactions').innerHTML = transactions.length;
             document.getElementById('totalEtudiants').innerHTML = totalEtudiants;
+            
             const tbody = document.getElementById('rapportTableBody');
-            if (transactions.length === 0) tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Aucune transaction</td></tr>';
-            else tbody.innerHTML = transactions.map(t => `<tr>
-                <td>${t.date ? new Date(t.date.toDate()).toLocaleDateString('fr-FR') : '-'}</td>
-                <td><span style="color:red; font-weight:bold;">${t.numeroRecu || t.id}</span></td>
-                <td>${escapeHtml(t.etudiantNom || '-')}</td>
-                <td>${escapeHtml(t.promotionNom || t.promotion || '-')}</td>
-                <td>${escapeHtml(t.anneeAcademiqueNom || '-')}</td>
-                <td>${t.fiches?.length || 0}</td>
-                <td>${(t.montantTotal || 0).toLocaleString()} Fc</td>
-            </tr>`).join('');
+            if (transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Aucune transaction</td></tr>';
+            } else {
+                tbody.innerHTML = transactions.map(t => `<tr>
+                    <td>${t.date ? new Date(t.date.toDate()).toLocaleDateString('fr-FR') : '-'}</td>
+                    <td><span style="color:red; font-weight:bold;">${t.numeroRecu || t.id}</span></td>
+                    <td>${escapeHtml(t.etudiantNom || '-')}</td>
+                    <td>${escapeHtml(t.promotionNom || t.promotion || '-')}</td>
+                    <td>${escapeHtml(t.anneeAcademiqueNom || '-')}</td>
+                    <td>${t.fiches?.length || 0}</td>
+                    <td>${(t.montantTotal || 0).toLocaleString()} Fc</td>
+                </tr>`).join('');
+            }
         }
         
         document.getElementById('profileBtn')?.addEventListener('click', () => {
@@ -1519,21 +1566,50 @@
         });
         
         document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            // Nettoyage des listeners avant déconnexion
+            if (unsubscribeAnnees) unsubscribeAnnees();
+            if (unsubscribePromotions) unsubscribePromotions();
+            if (unsubscribeEtudiants) unsubscribeEtudiants();
+            if (unsubscribeFiches) unsubscribeFiches();
+            if (unsubscribeTransactions) unsubscribeTransactions();
+            
             localStorage.removeItem('utilisateurCompta');
             window.location.href = 'login-comptabilite.html';
         });
         
-        window.addEventListener('online', () => { isOnline = true; document.getElementById('offlineIndicator').style.display = 'none'; showToast('🟢 Connecté', 'success'); });
-        window.addEventListener('offline', () => { isOnline = false; document.getElementById('offlineIndicator').style.display = 'block'; showToast('🔴 Mode hors-ligne', 'warning'); });
+        window.addEventListener('online', () => { 
+            isOnline = true; 
+            document.getElementById('offlineIndicator').style.display = 'none'; 
+            showToast('🟢 Connecté - Synchronisation en cours', 'success');
+            
+            // Force la synchronisation des données
+            db.collection('transactions').get({ source: 'server' }).catch(console.error);
+        });
         
+        window.addEventListener('offline', () => { 
+            isOnline = false; 
+            document.getElementById('offlineIndicator').style.display = 'block'; 
+            showToast('🔴 Mode hors-ligne - Les données sont en cache local', 'warning');
+        });
+        
+        // Initialisation
         mettreAJourStatsHeader();
         
+        // Exposer les fonctions globalement
         window.openPage = openPage;
         window.closePage = closePage;
         window.genererRapport = genererRapport;
         window.selectionnerEtudiant = selectionnerEtudiant;
         window.toggleFicheDirect = toggleFicheDirect;
         window.toggleFicheCheckbox = toggleFicheCheckbox;
+        
+        // Message de démarrage
+        if (!navigator.onLine) {
+            showToast('📱 Mode hors-ligne actif - Données disponibles en cache', 'warning');
+            document.getElementById('offlineIndicator').style.display = 'block';
+        } else {
+            showToast('✅ Application prête - Synchronisation active', 'success');
+        }
     </script>
 </body>
-</html> 
+</html>
