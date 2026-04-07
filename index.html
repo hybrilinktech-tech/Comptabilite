@@ -1063,27 +1063,44 @@
         }
         
         async function verifierFichesPayees(etudiantId, anneeId) {
-            if (!etudiantId || !anneeId) return [];
-            
-            // Optimisation: utilisation du cache local d'abord
-            const snapshot = await db.collection('transactions')
-                .where('etudiantId', '==', etudiantId)
-                .where('anneeAcademiqueId', '==', anneeId)
-                .get({ source: 'default' });
-            
-            const fichesPayees = [];
-            snapshot.forEach(doc => {
-                const transaction = doc.data();
-                if (transaction.fiches && transaction.fiches.length > 0) {
-                    transaction.fiches.forEach(fiche => {
-                        if (fiche.id && !fichesPayees.includes(fiche.id)) {
+    if (!etudiantId || !anneeId) return [];
+    
+    try {
+        // Optimisation: utilisation du cache local d'abord
+        const snapshot = await db.collection('transactions')
+            .where('etudiantId', '==', etudiantId)
+            .where('anneeAcademiqueId', '==', anneeId)
+            .get({ source: 'default' });
+        
+        const fichesPayees = [];
+        snapshot.forEach(doc => {
+            const transaction = doc.data();
+            if (transaction.fiches && Array.isArray(transaction.fiches) && transaction.fiches.length > 0) {
+                transaction.fiches.forEach(fiche => {
+                    // Vérification que l'ID de la fiche existe et n'est pas undefined/null
+                    if (fiche && fiche.id && typeof fiche.id === 'string' && !fichesPayees.includes(fiche.id)) {
+                        // Vérifier que la fiche existe réellement dans allFiches
+                        const ficheExiste = allFiches.some(f => f.id === fiche.id);
+                        if (ficheExiste) {
                             fichesPayees.push(fiche.id);
                         }
-                    });
-                }
-            });
-            return fichesPayees;
-        }
+                    }
+                });
+            }
+        });
+        
+        // Filtrer les doublons et les IDs invalides
+        const fichesValides = fichesPayees.filter(id => {
+            const ficheExiste = allFiches.some(f => f.id === id);
+            return ficheExiste;
+        });
+        
+        return fichesValides;
+    } catch(e) {
+        console.error('Erreur dans verifierFichesPayees:', e);
+        return [];
+    }
+}
         
         async function afficherStatutPaiement(etudiantId, anneeId) {
     const statutDiv = document.getElementById('paymentStatusInfo');
@@ -1094,32 +1111,23 @@
     
     const fichesPayees = await verifierFichesPayees(etudiantId, anneeId);
     
-    if (fichesPayees.length > 0) {
-        // Attendre que allFiches soit chargé
-        if (allFiches.length === 0) {
-            // Attendre le chargement des fiches
-            await new Promise(resolve => {
-                const checkFiches = setInterval(() => {
-                    if (allFiches.length > 0) {
-                        clearInterval(checkFiches);
-                        resolve();
-                    }
-                }, 100);
-            });
-        }
-        
+    if (fichesPayees && fichesPayees.length > 0) {
         const nomsFiches = fichesPayees.map(fId => {
-            const fiche = allFiches.find(f => f.id === fId);
-            return fiche ? fiche.nom : fId;
-        }).join(', ');
+            const fiche = allFiches.find(f => f && f.id === fId);
+            return fiche && fiche.nom ? fiche.nom : null;
+        }).filter(nom => nom !== null); // Filtrer les noms null/undefined
         
-        statutDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>Fiches déjà payées cette année:</strong> ${nomsFiches}`;
+        if (nomsFiches.length > 0) {
+            statutDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>Fiches déjà payées cette année:</strong> ${nomsFiches.join(', ')}`;
+        } else {
+            statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
+        }
         statutDiv.style.display = 'block';
     } else {
         statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
         statutDiv.style.display = 'block';
     }
-    return fichesPayees;
+    return fichesPayees || [];
 }
         
         // Listeners optimisés avec gestion du cache automatique par Firestore
