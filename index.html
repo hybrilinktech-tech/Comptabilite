@@ -1086,26 +1086,41 @@
         }
         
         async function afficherStatutPaiement(etudiantId, anneeId) {
-            const statutDiv = document.getElementById('paymentStatusInfo');
-            if (!etudiantId || !anneeId) {
-                statutDiv.style.display = 'none';
-                return;
-            }
-            
-            const fichesPayees = await verifierFichesPayees(etudiantId, anneeId);
-            if (fichesPayees.length > 0) {
-                const nomsFiches = fichesPayees.map(fId => {
-                    const fiche = allFiches.find(f => f.id === fId);
-                    return fiche ? fiche.nom : fId;
-                }).join(', ');
-                statutDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>Fiches déjà payées cette année:</strong> ${nomsFiches}`;
-                statutDiv.style.display = 'block';
-            } else {
-                statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
-                statutDiv.style.display = 'block';
-            }
-            return fichesPayees;
+    const statutDiv = document.getElementById('paymentStatusInfo');
+    if (!etudiantId || !anneeId) {
+        statutDiv.style.display = 'none';
+        return [];
+    }
+    
+    const fichesPayees = await verifierFichesPayees(etudiantId, anneeId);
+    
+    if (fichesPayees.length > 0) {
+        // Attendre que allFiches soit chargé
+        if (allFiches.length === 0) {
+            // Attendre le chargement des fiches
+            await new Promise(resolve => {
+                const checkFiches = setInterval(() => {
+                    if (allFiches.length > 0) {
+                        clearInterval(checkFiches);
+                        resolve();
+                    }
+                }, 100);
+            });
         }
+        
+        const nomsFiches = fichesPayees.map(fId => {
+            const fiche = allFiches.find(f => f.id === fId);
+            return fiche ? fiche.nom : fId;
+        }).join(', ');
+        
+        statutDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>Fiches déjà payées cette année:</strong> ${nomsFiches}`;
+        statutDiv.style.display = 'block';
+    } else {
+        statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
+        statutDiv.style.display = 'block';
+    }
+    return fichesPayees;
+}
         
         // Listeners optimisés avec gestion du cache automatique par Firestore
         unsubscribeAnnees = db.collection('anneesAcademiques').onSnapshot(snapshot => {
