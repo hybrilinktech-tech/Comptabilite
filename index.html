@@ -22,6 +22,10 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
@@ -317,17 +321,14 @@
         .fiche-paid::after {
             content: "✓ PAYÉ";
             position: absolute;
-            right: 3px;
+            right: 10px;
             top: 50%;
-            transform: 
-bottom: 50%;
-
-translateY(-50%);
+            transform: translateY(-50%);
             background: #28a745;
             color: white;
-            padding:  8px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 3px;
+            font-size: 11px;
             font-weight: bold;
         }
         
@@ -420,6 +421,7 @@ translateY(-50%);
         
         .rapport-table {
             overflow-x: auto;
+            margin-top: 20px;
         }
         
         .rapport-table table {
@@ -436,6 +438,8 @@ translateY(-50%);
         .rapport-table th {
             background: #003366;
             color: white;
+            position: sticky;
+            top: 0;
         }
         
         .rapport-table tr:hover { background: #f8f9fa; }
@@ -446,6 +450,33 @@ translateY(-50%);
             padding: 20px;
             margin-bottom: 20px;
         }
+        
+        .date-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn-group-export {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-export {
+            flex: 1;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-excel { background: #28a745; color: white; }
+        .btn-pdf { background: #dc3545; color: white; }
+        .btn-print { background: #17a2b8; color: white; }
+        .btn-export:hover { transform: translateY(-2px); opacity: 0.9; }
         
         .profile-modal {
             position: fixed;
@@ -481,6 +512,10 @@ translateY(-50%);
             display: inline-block;
         }
         
+        .search-fiche-input {
+            margin-bottom: 15px;
+        }
+        
         .install-banner {
             position: fixed;
             bottom: 20px;
@@ -513,6 +548,12 @@ translateY(-50%);
             cursor: pointer;
         }
         
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
         @media print {
             body * {
                 visibility: hidden;
@@ -531,18 +572,6 @@ translateY(-50%);
             .no-print {
                 display: none;
             }
-            .receipt-exemplaire {
-                page-break-after: avoid;
-                page-break-inside: avoid;
-                margin-bottom: 30px;
-                border: 1px solid #000;
-                position: relative;
-                overflow: hidden;
-            }
-            @page {
-                size: A4;
-                margin: 1.5cm;
-            }
         }
         
         .receipt-exemplaire {
@@ -554,6 +583,8 @@ translateY(-50%);
             font-family: 'Times New Roman', serif;
             position: relative;
             overflow: hidden;
+            page-break-after: avoid;
+            page-break-inside: avoid;
         }
         
         .receipt-watermark {
@@ -570,14 +601,6 @@ translateY(-50%);
             text-align: center;
         }
         
-        .receipt-watermark img {
-            width: 100%;
-            height: auto;
-            display: block;
-            max-width: 200px;
-            margin: 0 auto;
-        }
-        
         .receipt-content {
             position: relative;
             z-index: 1;
@@ -591,20 +614,21 @@ translateY(-50%);
             padding-bottom: 10px;
         }
         
-        .receipt-header h2 {
-            font-size: 16px;
-            margin: 0;
-            text-transform: uppercase;
+        .receipt-logo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
         }
         
-        .receipt-header h3 {
-            font-size: 14px;
-            margin: 5px 0;
+        .receipt-logo-left img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
         }
         
-        .receipt-header p {
-            font-size: 12px;
-            margin: 0;
+        .receipt-logo-text {
+            text-align: center;
         }
         
         .receipt-number {
@@ -665,23 +689,6 @@ translateY(-50%);
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px dashed #000;
-        }
-        
-        .receipt-logo {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-        
-        .receipt-logo-left img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-        }
-        
-        .receipt-logo-text {
-            text-align: center;
         }
     </style>
 </head>
@@ -778,6 +785,12 @@ translateY(-50%);
             </div>
             
             <div id="fichesContainer" style="display: none;">
+                <div class="form-group search-fiche-input">
+                    <div class="input-group-custom">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="searchFiche" placeholder="Rechercher une fiche par nom ou description" autocomplete="off">
+                    </div>
+                </div>
                 <h6><i class="bi bi-file-text-fill"></i> Fiches disponibles</h6>
                 <div id="fichesList"></div>
                 
@@ -821,12 +834,38 @@ translateY(-50%);
                             </select>
                         </div>
                     </div>
+                </div>
+                
+                <div class="date-range">
                     <div class="form-group">
-                        <button class="btn-submit" onclick="genererRapport()" style="margin-top: 0;">
-                            <i class="bi bi-search"></i> Filtrer
-                        </button>
+                        <div class="input-group-custom">
+                            <i class="bi bi-calendar-date"></i>
+                            <input type="date" id="dateDebut" placeholder="Date début">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group-custom">
+                            <i class="bi bi-calendar-date"></i>
+                            <input type="date" id="dateFin" placeholder="Date fin">
+                        </div>
                     </div>
                 </div>
+                
+                <div class="btn-group-export">
+                    <button class="btn-export btn-excel" onclick="exporterExcel()">
+                        <i class="bi bi-file-excel"></i> Excel
+                    </button>
+                    <button class="btn-export btn-pdf" onclick="exporterPDF()">
+                        <i class="bi bi-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn-export btn-print" onclick="imprimerRapport()">
+                        <i class="bi bi-printer"></i> Imprimer
+                    </button>
+                </div>
+                
+                <button class="btn-submit" onclick="genererRapport()" style="margin-top: 15px;">
+                    <i class="bi bi-search"></i> Appliquer les filtres
+                </button>
             </div>
             
             <div class="row">
@@ -853,7 +892,7 @@ translateY(-50%);
                 </div>
             </div>
             
-            <div class="rapport-table">
+            <div class="rapport-table" id="rapportTable">
                 <table>
                     <thead>
                         <tr><th>Date</th><th>N° Reçu</th><th>Étudiant</th><th>Promotion</th><th>Année académique</th><th>Fiches</th><th>Montant</th></tr>
@@ -885,8 +924,6 @@ translateY(-50%);
         </div>
     </div>
     
-    <div id="receiptModal" style="display: none;"></div>
-    
     <div id="installBanner" class="install-banner" style="display: none;">
         <div>
             <i class="bi bi-download"></i> <strong>Installer l'application</strong><br>
@@ -911,80 +948,324 @@ translateY(-50%);
         
         firebase.initializeApp(firebaseConfig);
         
-        // Configuration importante pour le cache local et la persistance
         const db = firebase.firestore();
         
-        // Activer la persistance locale (cache) - permet le fonctionnement hors-ligne
         db.enablePersistence({ synchronizeTabs: true })
-            .then(() => {
-                console.log('Persistance hors-ligne activée avec succès');
-                showToast('Mode hors-ligne activé', 'success');
-            })
-            .catch((err) => {
-                if (err.code === 'failed-precondition') {
-                    console.warn('Persistance impossible (onglets multiples)');
-                } else if (err.code === 'unimplemented') {
-                    console.warn('Persistance non supportée par le navigateur');
-                }
-            });
+            .then(() => console.log('Persistance hors-ligne activée'))
+            .catch((err) => console.warn('Erreur persistance:', err));
         
-        let isOnline = navigator.onLine;
         let currentStudent = null;
         let selectedFiches = [];
         let allStudents = [];
         let allPromotions = [];
         let allAnnees = [];
         let allFiches = [];
-        let searchTimeout = null;
         let studentPaidFiches = [];
+        let currentFilteredFiches = [];
         
-        // Gestion des listeners pour optimisation du cache
-        let unsubscribeAnnees = null;
-        let unsubscribePromotions = null;
-        let unsubscribeEtudiants = null;
-        let unsubscribeFiches = null;
-        let unsubscribeTransactions = null;
+        const utilisateurActuel = JSON.parse(localStorage.getItem('utilisateurCompta') || 'null');
+        if (!utilisateurActuel || utilisateurActuel.role !== 'comptabilite') {
+            window.location.href = 'login-comptabilite.html';
+        }
         
-        // PWA Installation
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installBanner').style.display = 'flex';
-        });
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const bgColor = type === 'success' ? '#28a745' : (type === 'warning' ? '#ffc107' : '#dc3545');
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : (type === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill');
+            const toastHtml = `<div class="toast" style="background: ${bgColor}; color: ${textColor}; border-radius: 10px; margin-bottom: 10px; animation: slideInRight 0.3s ease-out;"><div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div></div>`;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => container.firstElementChild?.remove(), 4000);
+        }
         
-        document.getElementById('installBtn')?.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    showToast('Application installée avec succès!', 'success');
+        function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
+        async function mettreAJourStatsHeader() {
+            try {
+                const aujourdhui = new Date();
+                aujourdhui.setHours(0, 0, 0, 0);
+                const demain = new Date(aujourdhui);
+                demain.setDate(demain.getDate() + 1);
+                
+                const snapshot = await db.collection('transactions')
+                    .where('date', '>=', aujourdhui)
+                    .where('date', '<', demain)
+                    .get();
+                
+                let total = 0;
+                snapshot.forEach(doc => { total += doc.data().montantTotal || 0; });
+                document.getElementById('todayMontantHeader').textContent = total.toLocaleString() + ' FC';
+                document.getElementById('todayCountHeader').textContent = snapshot.size;
+            } catch(e) { console.error(e); }
+        }
+        
+        async function verifierFichesPayees(etudiantId, anneeId) {
+            if (!etudiantId || !anneeId) return [];
+            try {
+                const snapshot = await db.collection('transactions')
+                    .where('etudiantId', '==', etudiantId)
+                    .where('anneeAcademiqueId', '==', anneeId)
+                    .get();
+                
+                const fichesPayees = [];
+                snapshot.forEach(doc => {
+                    const transaction = doc.data();
+                    if (transaction.fiches && Array.isArray(transaction.fiches)) {
+                        transaction.fiches.forEach(fiche => {
+                            if (fiche && fiche.id && !fichesPayees.includes(fiche.id)) {
+                                fichesPayees.push(fiche.id);
+                            }
+                        });
+                    }
+                });
+                return fichesPayees;
+            } catch(e) {
+                console.error('Erreur:', e);
+                return [];
+            }
+        }
+        
+        async function afficherStatutPaiement(etudiantId, anneeId) {
+            const statutDiv = document.getElementById('paymentStatusInfo');
+            if (!etudiantId || !anneeId) {
+                statutDiv.style.display = 'none';
+                return [];
+            }
+            
+            const fichesPayees = await verifierFichesPayees(etudiantId, anneeId);
+            
+            if (fichesPayees.length > 0) {
+                const nomsFiches = fichesPayees.map(fId => {
+                    const fiche = allFiches.find(f => f && f.id === fId);
+                    return fiche && fiche.nom ? fiche.nom : null;
+                }).filter(nom => nom !== null);
+                
+                if (nomsFiches.length > 0) {
+                    statutDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>Fiches déjà payées:</strong> ${nomsFiches.join(', ')}`;
+                } else {
+                    statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année`;
                 }
-                deferredPrompt = null;
-                document.getElementById('installBanner').style.display = 'none';
+                statutDiv.style.display = 'block';
+            } else {
+                statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
+                statutDiv.style.display = 'block';
+            }
+            return fichesPayees || [];
+        }
+        
+        // Listeners Firestore
+        db.collection('anneesAcademiques').onSnapshot(snapshot => {
+            allAnnees = [];
+            snapshot.forEach(doc => allAnnees.push({ id: doc.id, ...doc.data() }));
+            const anneeSelect = document.getElementById('anneeAcademiqueSelect');
+            const rapportAnnee = document.getElementById('rapportAnneeSelect');
+            if(anneeSelect) {
+                anneeSelect.innerHTML = '<option value="">Sélectionner l\'année</option>';
+                allAnnees.forEach(a => anneeSelect.innerHTML += `<option value="${a.id}">${escapeHtml(a.annee || a.nom)}</option>`);
+            }
+            if(rapportAnnee) {
+                rapportAnnee.innerHTML = '<option value="">Toutes les années</option>';
+                allAnnees.forEach(a => rapportAnnee.innerHTML += `<option value="${a.id}">${escapeHtml(a.annee || a.nom)}</option>`);
             }
         });
         
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('Service Worker enregistré:', reg.scope);
-                }).catch(err => {
-                    console.log('Erreur Service Worker:', err);
-                });
+        db.collection('promotions').onSnapshot(snapshot => {
+            allPromotions = [];
+            snapshot.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
+            const promoSelect = document.getElementById('promotionSelect');
+            const rapportPromo = document.getElementById('rapportPromotionSelect');
+            if(promoSelect) {
+                promoSelect.innerHTML = '<option value="">Sélectionner la promotion</option>';
+                allPromotions.forEach(p => promoSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
+            }
+            if(rapportPromo) {
+                rapportPromo.innerHTML = '<option value="">Toutes les promotions</option>';
+                allPromotions.forEach(p => rapportPromo.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
+            }
+        });
+        
+        db.collection('etudiants').onSnapshot(snapshot => {
+            allStudents = [];
+            snapshot.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
+        });
+        
+        db.collection('fiches').onSnapshot(snapshot => {
+            allFiches = [];
+            snapshot.forEach(doc => allFiches.push({ id: doc.id, ...doc.data() }));
+        });
+        
+        db.collection('transactions').onSnapshot(() => { mettreAJourStatsHeader(); });
+        
+        function openPage(page) {
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`).classList.add('active');
+            if (page === 'rapport') {
+                const today = new Date().toISOString().split('T')[0];
+                const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+                document.getElementById('dateDebut').value = firstDay;
+                document.getElementById('dateFin').value = today;
+                genererRapport();
+            }
+        }
+        
+        function closePage(page) {
+            document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`).classList.remove('active');
+            document.getElementById('mainPage').style.display = 'flex';
+            if (page === 'paiement') {
+                currentStudent = null;
+                selectedFiches = [];
+                studentPaidFiches = [];
+                document.getElementById('searchEtudiant').value = '';
+                document.getElementById('searchResults').style.display = 'none';
+                document.getElementById('studentInfo').style.display = 'none';
+                document.getElementById('fichesContainer').style.display = 'none';
+                document.getElementById('searchFiche').value = '';
+            }
+        }
+        
+        // Recherche étudiant
+        const searchInput = document.getElementById('searchEtudiant');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                if (searchTerm.length < 2) { 
+                    document.getElementById('searchResults').style.display = 'none'; 
+                    return; 
+                }
+                setTimeout(() => {
+                    const results = allStudents.filter(student => student.nom && student.nom.toLowerCase().includes(searchTerm.toLowerCase()));
+                    const resultsDiv = document.getElementById('searchResults');
+                    if (results.length > 0) {
+                        resultsDiv.innerHTML = results.map(student => {
+                            const promoNom = getPromotionNom(student.promotion);
+                            return `<div class="search-result-item" onclick="selectionnerEtudiant('${student.id}', '${escapeHtml(student.nom)}', '${student.promotion || ''}')"><i class="bi bi-person-circle"></i> <strong>${escapeHtml(student.nom)}</strong><br><small>${student.matricule || student.id} - ${escapeHtml(promoNom)}</small></div>`;
+                        }).join('');
+                        resultsDiv.style.display = 'block';
+                    } else {
+                        resultsDiv.innerHTML = '<div class="search-result-item">Aucun étudiant trouvé</div>';
+                        resultsDiv.style.display = 'block';
+                    }
+                }, 300);
             });
         }
         
-        function genererNumeroReçu() {
-            const partie1 = Math.floor(Math.random() * 900) + 100;
-            const partie2 = Math.floor(Math.random() * 900) + 100;
-            return `${partie1}-${partie2}`;
+        window.selectionnerEtudiant = async function(id, nom, promotionId) {
+            const anneeId = document.getElementById('anneeAcademiqueSelect').value;
+            if (!anneeId) {
+                showToast('Veuillez d\'abord sélectionner l\'année académique', 'warning');
+                return;
+            }
+            
+            currentStudent = { id: id, nomComplet: nom, promotion: promotionId || '' };
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('searchEtudiant').value = nom;
+            document.getElementById('studentInfo').style.display = 'block';
+            const promoNom = getPromotionNom(promotionId);
+            document.getElementById('studentDetails').innerHTML = `<i class="bi bi-person-badge"></i> <strong>${escapeHtml(nom)}</strong><br><i class="bi bi-mortarboard-fill"></i> Promotion: <span class="promotion-badge">${escapeHtml(promoNom)}</span><br><i class="bi bi-file-text"></i> Matricule: ${escapeHtml(id)}`;
+            
+            studentPaidFiches = await afficherStatutPaiement(id, anneeId);
+            chargerFichesEtudiant(promotionId, anneeId);
         }
         
         function getPromotionNom(promotionId) {
             if (!promotionId) return 'Non définie';
             const promo = allPromotions.find(p => p.id === promotionId);
             return promo ? promo.nom : promotionId;
+        }
+        
+        function chargerFichesEtudiant(promotionId, anneeId) {
+            if (!promotionId) { 
+                document.getElementById('fichesContainer').style.display = 'none'; 
+                showToast('Cet étudiant n\'a pas de promotion assignée', 'warning'); 
+                return; 
+            }
+            
+            currentFilteredFiches = allFiches.filter(fiche => {
+                if (fiche.promotions && Array.isArray(fiche.promotions)) {
+                    return fiche.promotions.includes(promotionId);
+                }
+                else if (fiche.promotion) {
+                    return fiche.promotion === promotionId;
+                }
+                return false;
+            });
+            
+            afficherListeFiches(currentFilteredFiches);
+            document.getElementById('fichesContainer').style.display = 'block';
+            
+            // Recherche de fiche
+            const searchFicheInput = document.getElementById('searchFiche');
+            if (searchFicheInput) {
+                searchFicheInput.oninput = function() {
+                    const term = this.value.toLowerCase();
+                    const filtered = currentFilteredFiches.filter(fiche => 
+                        fiche.nom.toLowerCase().includes(term) || 
+                        (fiche.description && fiche.description.toLowerCase().includes(term))
+                    );
+                    afficherListeFiches(filtered);
+                    if (filtered.length === 0) {
+                        document.getElementById('fichesList').innerHTML = '<div class="no-results">Aucune fiche trouvée</div>';
+                    }
+                };
+            }
+        }
+        
+        function afficherListeFiches(fiches) {
+            const fichesListDiv = document.getElementById('fichesList');
+            if (fiches.length > 0) {
+                fichesListDiv.innerHTML = fiches.map(fiche => {
+                    const isPaid = studentPaidFiches.includes(fiche.id);
+                    const paidClass = isPaid ? 'fiche-paid' : '';
+                    return `
+                        <div class="fiche-item ${paidClass}" data-id="${fiche.id}" data-prix="${fiche.montant || 0}" onclick="${!isPaid ? `toggleFicheDirect('${fiche.id}', ${fiche.montant || 0})` : ''}">
+                            <div><strong>${escapeHtml(fiche.nom)}</strong><br><small>${escapeHtml(fiche.description || '')}</small></div>
+                            <div><span class="fiche-price">${(fiche.montant || 0).toLocaleString()} Fc</span>
+                            ${!isPaid ? `<input type="checkbox" class="fiche-checkbox" id="fiche_${fiche.id}" onclick="event.stopPropagation()" onchange="toggleFicheCheckbox('${fiche.id}', ${fiche.montant || 0})">` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                fichesListDiv.innerHTML = '<div class="info-banner"><i class="bi bi-info-circle"></i> Aucune fiche disponible pour cette promotion</div>';
+            }
+            selectedFiches = [];
+            updateTotal();
+        }
+        
+        window.toggleFicheDirect = function(ficheId, prix) {
+            const checkbox = document.getElementById(`fiche_${ficheId}`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                toggleFicheCheckbox(ficheId, prix);
+                const ficheDiv = checkbox.closest('.fiche-item');
+                if (ficheDiv) {
+                    if (checkbox.checked) ficheDiv.classList.add('selected');
+                    else ficheDiv.classList.remove('selected');
+                }
+            }
+        }
+        
+        window.toggleFicheCheckbox = function(ficheId, prix) {
+            const index = selectedFiches.findIndex(f => f.id === ficheId);
+            if (index === -1) selectedFiches.push({ id: ficheId, prix });
+            else selectedFiches.splice(index, 1);
+            updateTotal();
+            const ficheDiv = document.getElementById(`fiche_${ficheId}`)?.closest('.fiche-item');
+            if (ficheDiv) {
+                if (selectedFiches.find(f => f.id === ficheId)) ficheDiv.classList.add('selected');
+                else ficheDiv.classList.remove('selected');
+            }
+        }
+        
+        function updateTotal() { 
+            const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0); 
+            document.getElementById('totalAmount').innerHTML = `${total.toLocaleString()} Fc`; 
+        }
+        
+        function genererNumeroReçu() {
+            const partie1 = Math.floor(Math.random() * 900) + 100;
+            const partie2 = Math.floor(Math.random() * 900) + 100;
+            return `${partie1}-${partie2}`;
         }
         
         function numberToWords(number) {
@@ -1028,436 +1309,146 @@ translateY(-50%);
             return result.toUpperCase() + ' FRANCS CONGOLAIS';
         }
         
-        const utilisateurActuel = JSON.parse(localStorage.getItem('utilisateurCompta') || 'null');
-        if (!utilisateurActuel || utilisateurActuel.role !== 'comptabilite') {
-            window.location.href = 'login-comptabilite.html';
-        }
-        
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const bgColor = type === 'success' ? '#28a745' : (type === 'warning' ? '#ffc107' : '#dc3545');
-            const textColor = type === 'warning' ? '#333' : 'white';
-            const icon = type === 'success' ? 'check-circle-fill' : (type === 'warning' ? 'exclamation-triangle-fill' : 'x-circle-fill');
-            const toastHtml = `<div class="toast" style="background: ${bgColor}; color: ${textColor}; border-radius: 10px; margin-bottom: 10px; animation: slideInRight 0.3s ease-out;"><div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div></div>`;
-            container.insertAdjacentHTML('afterbegin', toastHtml);
-            setTimeout(() => container.firstElementChild?.remove(), 4000);
-        }
-        
-        function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-        
-        async function mettreAJourStatsHeader() {
-            try {
-                const aujourdhui = new Date();
-                aujourdhui.setHours(0, 0, 0, 0);
-                const demain = new Date(aujourdhui);
-                demain.setDate(demain.getDate() + 1);
-                
-                // Utilisation de source 'cache' puis 'server' pour optimiser les lectures
-                const snapshot = await db.collection('transactions')
-                    .where('date', '>=', aujourdhui)
-                    .where('date', '<', demain)
-                    .get({ source: 'default' }); // Par défaut: cache d'abord, puis serveur
-                
-                let total = 0;
-                snapshot.forEach(doc => { total += doc.data().montantTotal || 0; });
-                document.getElementById('todayMontantHeader').textContent = total.toLocaleString() + ' FC';
-                document.getElementById('todayCountHeader').textContent = snapshot.size;
-            } catch(e) { console.error(e); }
-        }
-        
-        async function verifierFichesPayees(etudiantId, anneeId) {
-    if (!etudiantId || !anneeId) return [];
-    
-    try {
-        // Optimisation: utilisation du cache local d'abord
-        const snapshot = await db.collection('transactions')
-            .where('etudiantId', '==', etudiantId)
-            .where('anneeAcademiqueId', '==', anneeId)
-            .get({ source: 'default' });
-        
-        const fichesPayees = [];
-        snapshot.forEach(doc => {
-            const transaction = doc.data();
-            if (transaction.fiches && Array.isArray(transaction.fiches) && transaction.fiches.length > 0) {
-                transaction.fiches.forEach(fiche => {
-                    // Vérification que l'ID de la fiche existe et n'est pas undefined/null
-                    if (fiche && fiche.id && typeof fiche.id === 'string' && !fichesPayees.includes(fiche.id)) {
-                        // Vérifier que la fiche existe réellement dans allFiches
-                        const ficheExiste = allFiches.some(f => f.id === fiche.id);
-                        if (ficheExiste) {
-                            fichesPayees.push(fiche.id);
-                        }
-                    }
-                });
-            }
-        });
-        
-        // Filtrer les doublons et les IDs invalides
-        const fichesValides = fichesPayees.filter(id => {
-            const ficheExiste = allFiches.some(f => f.id === id);
-            return ficheExiste;
-        });
-        
-        return fichesValides;
-    } catch(e) {
-        console.error('Erreur dans verifierFichesPayees:', e);
-        return [];
-    }
-}
-        
-        async function afficherStatutPaiement(etudiantId, anneeId) {
-    const statutDiv = document.getElementById('paymentStatusInfo');
-    if (!etudiantId || !anneeId) {
-        statutDiv.style.display = 'none';
-        return [];
-    }
-    
-    const fichesPayees = await verifierFichesPayees(etudiantId, anneeId);
-    
-    if (fichesPayees && fichesPayees.length > 0) {
-        const nomsFiches = fichesPayees.map(fId => {
-            const fiche = allFiches.find(f => f && f.id === fId);
-            return fiche && fiche.nom ? fiche.nom : null;
-        }).filter(nom => nom !== null); // Filtrer les noms null/undefined
-        
-        if (nomsFiches.length > 0) {
-            statutDiv.innerHTML = `<i class="bi bi-check-circle-fill text-success"></i> <strong>Fiches déjà payées cette année:</strong> ${nomsFiches.join(', ')}`;
-        } else {
-            statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
-        }
-        statutDiv.style.display = 'block';
-    } else {
-        statutDiv.innerHTML = `<i class="bi bi-info-circle-fill text-info"></i> Aucun paiement effectué cette année académique`;
-        statutDiv.style.display = 'block';
-    }
-    return fichesPayees || [];
-}
-        
-        // Listeners optimisés avec gestion du cache automatique par Firestore
-        unsubscribeAnnees = db.collection('anneesAcademiques').onSnapshot(snapshot => {
-            allAnnees = [];
-            snapshot.forEach(doc => allAnnees.push({ id: doc.id, ...doc.data() }));
-            const anneeSelect = document.getElementById('anneeAcademiqueSelect');
-            const rapportAnnee = document.getElementById('rapportAnneeSelect');
-            if(anneeSelect) {
-                anneeSelect.innerHTML = '<option value="">Sélectionner l\'année</option>';
-                allAnnees.forEach(a => anneeSelect.innerHTML += `<option value="${a.id}">${escapeHtml(a.annee || a.nom)}</option>`);
-            }
-            if(rapportAnnee) {
-                rapportAnnee.innerHTML = '<option value="">Toutes les années</option>';
-                allAnnees.forEach(a => rapportAnnee.innerHTML += `<option value="${a.id}">${escapeHtml(a.annee || a.nom)}</option>`);
-            }
-        });
-        
-        unsubscribePromotions = db.collection('promotions').onSnapshot(snapshot => {
-            allPromotions = [];
-            snapshot.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
-            const promoSelect = document.getElementById('promotionSelect');
-            const rapportPromo = document.getElementById('rapportPromotionSelect');
-            if(promoSelect) {
-                promoSelect.innerHTML = '<option value="">Sélectionner la promotion</option>';
-                allPromotions.forEach(p => promoSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
-            }
-            if(rapportPromo) {
-                rapportPromo.innerHTML = '<option value="">Toutes les promotions</option>';
-                allPromotions.forEach(p => rapportPromo.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
-            }
-        });
-        
-        unsubscribeEtudiants = db.collection('etudiants').onSnapshot(snapshot => {
-            allStudents = [];
-            snapshot.forEach(doc => allStudents.push({ id: doc.id, ...doc.data() }));
-        });
-        
-        unsubscribeFiches = db.collection('fiches').onSnapshot(snapshot => {
-            allFiches = [];
-            snapshot.forEach(doc => allFiches.push({ id: doc.id, ...doc.data() }));
-        });
-        
-        unsubscribeTransactions = db.collection('transactions').onSnapshot(() => { 
-            mettreAJourStatsHeader(); 
-        });
-        
-        function openPage(page) {
-            document.getElementById('mainPage').style.display = 'none';
-            document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`).classList.add('active');
-            if (page === 'rapport') genererRapport();
-        }
-        
-        function closePage(page) {
-            document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`).classList.remove('active');
-            document.getElementById('mainPage').style.display = 'flex';
-            if (page === 'paiement') {
-                currentStudent = null;
-                selectedFiches = [];
-                studentPaidFiches = [];
-                document.getElementById('searchEtudiant').value = '';
-                document.getElementById('searchResults').style.display = 'none';
-                document.getElementById('studentInfo').style.display = 'none';
-                document.getElementById('fichesContainer').style.display = 'none';
-            }
-        }
-        
-        const searchInput = document.getElementById('searchEtudiant');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.trim();
-                if (searchTimeout) clearTimeout(searchTimeout);
-                if (searchTerm.length < 2) { document.getElementById('searchResults').style.display = 'none'; return; }
-                searchTimeout = setTimeout(() => {
-                    const results = allStudents.filter(student => student.nom && student.nom.toLowerCase().includes(searchTerm.toLowerCase()));
-                    const resultsDiv = document.getElementById('searchResults');
-                    if (results.length > 0) {
-                        resultsDiv.innerHTML = results.map(student => {
-                            const promoNom = getPromotionNom(student.promotion);
-                            return `<div class="search-result-item" onclick="selectionnerEtudiant('${student.id}', '${escapeHtml(student.nom)}', '${student.promotion || ''}')"><i class="bi bi-person-circle"></i> <strong>${escapeHtml(student.nom)}</strong><br><small>${student.matricule || student.id} - ${escapeHtml(promoNom)}</small></div>`;
-                        }).join('');
-                        resultsDiv.style.display = 'block';
-                    } else {
-                        resultsDiv.innerHTML = '<div class="search-result-item">Aucun étudiant trouvé</div>';
-                        resultsDiv.style.display = 'block';
-                    }
-                }, 300);
-            });
-        }
-        
-        window.selectionnerEtudiant = async function(id, nom, promotionId) {
-            const anneeId = document.getElementById('anneeAcademiqueSelect').value;
-            if (!anneeId) {
-                showToast('Veuillez d\'abord sélectionner l\'année académique', 'warning');
-                return;
-            }
-            
-            currentStudent = { id: id, nomComplet: nom, promotion: promotionId || '' };
-            document.getElementById('searchResults').style.display = 'none';
-            document.getElementById('searchEtudiant').value = nom;
-            document.getElementById('studentInfo').style.display = 'block';
-            const promoNom = getPromotionNom(promotionId);
-            document.getElementById('studentDetails').innerHTML = `<i class="bi bi-person-badge"></i> <strong>${escapeHtml(nom)}</strong><br><i class="bi bi-mortarboard-fill"></i> Promotion: <span class="promotion-badge">${escapeHtml(promoNom)}</span><br><i class="bi bi-file-text"></i> Matricule: ${escapeHtml(id)}`;
-            
-            studentPaidFiches = await afficherStatutPaiement(id, anneeId);
-            chargerFichesEtudiant(promotionId, anneeId);
-        }
-        
-        async function chargerFichesEtudiant(promotionId, anneeId) {
-            if (!promotionId) { 
-                document.getElementById('fichesContainer').style.display = 'none'; 
-                showToast('Cet étudiant n\'a pas de promotion assignée', 'warning'); 
-                return; 
-            }
-            
-            const fichesPromo = allFiches.filter(fiche => {
-                if (fiche.promotions && Array.isArray(fiche.promotions)) {
-                    return fiche.promotions.includes(promotionId);
-                }
-                else if (fiche.promotion) {
-                    return fiche.promotion === promotionId;
-                }
-                return false;
-            });
-            
-            const fichesListDiv = document.getElementById('fichesList');
-            if (fichesPromo.length > 0) {
-                fichesListDiv.innerHTML = fichesPromo.map(fiche => {
-                    const isPaid = studentPaidFiches.includes(fiche.id);
-                    const paidClass = isPaid ? 'fiche-paid' : '';
-                    return `
-                        <div class="fiche-item ${paidClass}" data-id="${fiche.id}" data-prix="${fiche.montant || 0}" onclick="${!isPaid ? `toggleFicheDirect('${fiche.id}', ${fiche.montant || 0})` : ''}">
-                            <div><strong>${escapeHtml(fiche.nom)}</strong><br><small>${escapeHtml(fiche.description || '')}</small></div>
-                            <div><span class="fiche-price">${(fiche.montant || 0).toLocaleString()} Fc</span>
-                            ${!isPaid ? `<input type="checkbox" class="fiche-checkbox" id="fiche_${fiche.id}" onclick="event.stopPropagation()" onchange="toggleFicheCheckbox('${fiche.id}', ${fiche.montant || 0})">` : ''}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                document.getElementById('fichesContainer').style.display = 'block';
-            } else {
-                fichesListDiv.innerHTML = '<div class="info-banner"><i class="bi bi-info-circle"></i> Aucune fiche disponible pour cette promotion</div>';
-                document.getElementById('fichesContainer').style.display = 'block';
-            }
-            selectedFiches = [];
-            updateTotal();
-        }
-        
-        window.toggleFicheDirect = function(ficheId, prix) {
-            const checkbox = document.getElementById(`fiche_${ficheId}`);
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-                toggleFicheCheckbox(ficheId, prix);
-                const ficheDiv = checkbox.closest('.fiche-item');
-                if (ficheDiv) {
-                    if (checkbox.checked) ficheDiv.classList.add('selected');
-                    else ficheDiv.classList.remove('selected');
-                }
-            }
-        }
-        
-        window.toggleFicheCheckbox = function(ficheId, prix) {
-            const index = selectedFiches.findIndex(f => f.id === ficheId);
-            if (index === -1) selectedFiches.push({ id: ficheId, prix });
-            else selectedFiches.splice(index, 1);
-            updateTotal();
-            const ficheDiv = document.getElementById(`fiche_${ficheId}`)?.closest('.fiche-item');
-            if (ficheDiv) {
-                if (selectedFiches.find(f => f.id === ficheId)) ficheDiv.classList.add('selected');
-                else ficheDiv.classList.remove('selected');
-            }
-        }
-        
-        function updateTotal() { const total = selectedFiches.reduce((sum, f) => sum + f.prix, 0); document.getElementById('totalAmount').innerHTML = `${total.toLocaleString()} Fc`; }
-        
-        function genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, exemplaireNum) {
-            const date = new Date().toLocaleDateString('fr-FR');
-            const fichesNoms = fiches.map(f => f.nom || 'Fiche').join(', ');
-            
-            return `
-                <div class="receipt-exemplaire" style="position: relative; overflow: hidden;">
-                    <div class="receipt-watermark">
-                        <img src="th.png" alt="Logo" style="width: 100%; height: auto; max-width: 180px; display: block; margin: 0 auto;" onerror="this.style.display='none'">
-                    </div>
-                    <div class="receipt-content">
-                        <div class="receipt-logo">
-                            <div class="receipt-logo-left">
-                                <img src="th.png" alt="Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 24 24\' fill=\'%23003366\'%3E%3Cpath d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/%3E%3C/svg%3E'">
-                            </div>
-                            <div class="receipt-logo-text">
-                                <h2>UNIVERSITÉ DE LUBUMBASHI</h2>
-                                <h3>ADMINISTRATION DU BUDGET</h3>
-                                <p>FACULTÉ D'AGRONOMIE</p>
-                            </div>
-                            <div style="width: 60px;"></div>
-                        </div>
-                        <div class="receipt-number">
-                            N° ${numeroReçu} - Exemplaire ${exemplaireNum}
-                        </div>
-                        <div class="receipt-body">
-                            <div class="receipt-line">
-                                <span class="receipt-label">N° Reçu de l'étudiant(e) :</span>
-                                <span class="receipt-value">${escapeHtml(transaction.etudiantNom)}</span>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Promotion :</span>
-                                <span class="receipt-value">${escapeHtml(promoNom)}</span>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Matricule :</span>
-                                <span class="receipt-value">${escapeHtml(transaction.etudiantMatricule)}</span>
-                            </div>
-                            <div class="receipt-amount">
-                                <div>La somme de (En chiffres)</div>
-                                <div class="receipt-amount-number">${total.toLocaleString()} FC</div>
-                                <div>(En lettres)</div>
-                                <div class="receipt-amount-letters">${montantLettres}</div>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Motif :</span>
-                                <span class="receipt-value">Paiement des frais : ${fichesNoms}</span>
-                            </div>
-                            <div class="receipt-line">
-                                <span class="receipt-label">Année académique :</span>
-                                <span class="receipt-value">${annee}</span>
-                            </div>
-                        </div>
-                        <div class="receipt-footer">
-                            <div>Fait à Lubumbashi, le ${date}</div>
-                            <div>Signature de l'AB</div>
-                        </div>
-                        <div class="receipt-signature">
-                            <div style="display: flex; justify-content: space-between;">
-                                <div>SCIENTIA SPLENDET ET CONSCIENTIA</div>
-                                <div>${escapeHtml(utilisateurActuel.nomComplet)}<br><small>(Signature manuelle)</small></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
         function imprimerReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu) {
-            const exemplaire1 = genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, 1);
-            const exemplaire2 = genererExemplaireReçu(transaction, fiches, total, annee, promoNom, montantLettres, numeroReçu, 2);
-            
-            const receiptHTML = `
-                <div class="print-area" id="printArea">
-                    ${exemplaire1}
-                    ${exemplaire2}
+    const date = new Date().toLocaleDateString('fr-FR');
+    const fichesNoms = fiches.map(f => f.nom || 'Fiche').join(', ');
+    
+    const exemplaire = (exemplaireNum) => `
+        <div class="receipt-exemplaire" style="position: relative; overflow: hidden;">
+            <div class="receipt-watermark">
+                <img src="th.png" alt="Logo" style="width: 100%; height: auto; max-width: 180px; display: block; margin: 0 auto;" onerror="this.style.display='none'">
+            </div>
+            <div class="receipt-content">
+                <div class="receipt-logo">
+                    <div class="receipt-logo-left">
+                        <img src="th.png" alt="Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 24 24\' fill=\'%23003366\'%3E%3Cpath d=\'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5\'/%3E%3C/svg%3E'">
+                    </div>
+                    <div class="receipt-logo-text">
+                        <h2>UNIVERSITÉ DE LUBUMBASHI</h2>
+                        <h3>ADMINISTRATION DU BUDGET</h3>
+                        <p>FACULTÉ D'AGRONOMIE</p>
+                    </div>
+                    <div style="width: 60px;"></div>
                 </div>
-            `;
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`<html><head><title>Reçu de paiement - ${numeroReçu}</title><style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { font-family: 'Times New Roman', serif; padding: 20px; background: white; }
-                .receipt-exemplaire { 
-                    border: 1px solid #000; 
-                    border-radius: 5px; 
-                    padding: 20px; 
-                    margin-bottom: 30px; 
-                    background: white;
-                    position: relative;
-                    overflow: hidden;
-                    page-break-after: avoid;
-                    page-break-inside: avoid;
-                }
-                .receipt-watermark {
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 35%;
-                    height: auto;
-                    opacity: 0.15;
-                    filter: blur(4px);
-                    pointer-events: none;
-                    z-index: 0;
-                    text-align: center;
-                }
-                .receipt-watermark img {
-                    width: 100%;
-                    height: auto;
-                    max-width: 180px;
-                    display: block;
-                    margin: 0 auto;
-                }
-                .receipt-content {
-                    position: relative;
-                    z-index: 1;
-                    background: transparent;
-                }
-                .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
-                .receipt-header h2 { font-size: 16px; margin: 0; text-transform: uppercase; }
-                .receipt-header h3 { font-size: 14px; margin: 5px 0; }
-                .receipt-header p { font-size: 12px; margin: 0; }
-                .receipt-number { text-align: right; font-size: 14px; font-weight: bold; color: red; margin-bottom: 15px; }
-                .receipt-body { margin: 20px 0; }
-                .receipt-line { margin: 12px 0; display: flex; align-items: baseline; }
-                .receipt-label { width: 180px; font-weight: bold; font-size: 13px; }
-                .receipt-value { flex: 1; border-bottom: 1px dotted #000; padding-left: 10px; font-size: 13px; }
-                .receipt-amount { margin: 20px 0; text-align: center; }
-                .receipt-amount-number { font-size: 20px; font-weight: bold; margin: 5px 0; }
-                .receipt-amount-letters { font-size: 13px; font-style: italic; }
-                .receipt-footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; }
-                .receipt-signature { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #000; }
-                .receipt-logo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-                .receipt-logo-left img { width: 60px; height: 60px; object-fit: contain; }
-                .receipt-logo-text { text-align: center; }
-                @media print {
-                    body { margin: 0; padding: 0; }
-                    .receipt-exemplaire { margin-bottom: 20px; page-break-after: avoid; }
-                    @page { size: A4; margin: 1.5cm; }
-                }
-            </style></head><body>${receiptHTML}</body></html>`);
-            printWindow.document.close();
-            
-            printWindow.onload = function() {
-                setTimeout(function() {
-                    printWindow.print();
-                    printWindow.onafterprint = function() {
-                        printWindow.close();
-                    };
-                }, 500);
-            };
+                <div class="receipt-number">
+                    N° ${numeroReçu} - Exemplaire ${exemplaireNum}
+                </div>
+                <div class="receipt-body">
+                    <div class="receipt-line">
+                        <span class="receipt-label">N° Reçu de l'étudiant(e) :</span>
+                        <span class="receipt-value">${escapeHtml(transaction.etudiantNom)}</span>
+                    </div>
+                    <div class="receipt-line">
+                        <span class="receipt-label">Promotion :</span>
+                        <span class="receipt-value">${escapeHtml(promoNom)}</span>
+                    </div>
+                    <div class="receipt-line">
+                        <span class="receipt-label">Matricule :</span>
+                        <span class="receipt-value">${escapeHtml(transaction.etudiantMatricule)}</span>
+                    </div>
+                    <div class="receipt-amount">
+                        <div>La somme de (En chiffres)</div>
+                        <div class="receipt-amount-number">${total.toLocaleString()} FC</div>
+                        <div>(En lettres)</div>
+                        <div class="receipt-amount-letters">${montantLettres}</div>
+                    </div>
+                    <div class="receipt-line">
+                        <span class="receipt-label">Motif :</span>
+                        <span class="receipt-value">Paiement des frais : ${fichesNoms}</span>
+                    </div>
+                    <div class="receipt-line">
+                        <span class="receipt-label">Année académique :</span>
+                        <span class="receipt-value">${annee}</span>
+                    </div>
+                </div>
+                <div class="receipt-footer">
+                    <div>Fait à Lubumbashi, le ${date}</div>
+                    <div>Signature de l'AB</div>
+                </div>
+                <div class="receipt-signature">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>SCIENTIA SPLENDET ET CONSCIENTIA</div>
+                        <div>${escapeHtml(utilisateurActuel.nomComplet)}<br><small>(Signature manuelle)</small></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`<html><head><title>Reçu de paiement - ${numeroReçu}</title><style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Times New Roman', serif; padding: 20px; background: white; }
+        .receipt-exemplaire { 
+            border: 1px solid #000; 
+            border-radius: 5px; 
+            padding: 20px; 
+            margin-bottom: 30px; 
+            background: white;
+            position: relative;
+            overflow: hidden;
+            page-break-after: avoid;
+            page-break-inside: avoid;
         }
+        .receipt-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 35%;
+            height: auto;
+            opacity: 0.15;
+            filter: blur(4px);
+            pointer-events: none;
+            z-index: 0;
+            text-align: center;
+        }
+        .receipt-watermark img {
+            width: 100%;
+            height: auto;
+            max-width: 180px;
+            display: block;
+            margin: 0 auto;
+        }
+        .receipt-content {
+            position: relative;
+            z-index: 1;
+            background: transparent;
+        }
+        .receipt-header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
+        .receipt-header h2 { font-size: 16px; margin: 0; text-transform: uppercase; }
+        .receipt-header h3 { font-size: 14px; margin: 5px 0; }
+        .receipt-header p { font-size: 12px; margin: 0; }
+        .receipt-number { text-align: right; font-size: 14px; font-weight: bold; color: red; margin-bottom: 15px; }
+        .receipt-body { margin: 20px 0; }
+        .receipt-line { margin: 12px 0; display: flex; align-items: baseline; }
+        .receipt-label { width: 180px; font-weight: bold; font-size: 13px; }
+        .receipt-value { flex: 1; border-bottom: 1px dotted #000; padding-left: 10px; font-size: 13px; }
+        .receipt-amount { margin: 20px 0; text-align: center; }
+        .receipt-amount-number { font-size: 20px; font-weight: bold; margin: 5px 0; }
+        .receipt-amount-letters { font-size: 13px; font-style: italic; }
+        .receipt-footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; }
+        .receipt-signature { margin-top: 30px; padding-top: 20px; border-top: 1px dashed #000; }
+        .receipt-logo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .receipt-logo-left img { width: 60px; height: 60px; object-fit: contain; }
+        .receipt-logo-text { text-align: center; }
+        @media print {
+            body { margin: 0; padding: 0; }
+            .receipt-exemplaire { margin-bottom: 20px; page-break-after: avoid; }
+            @page { size: A4; margin: 1.5cm; }
+        }
+    </style></head><body>${exemplaire(1)}${exemplaire(2)}</body></html>`);
+    printWindow.document.close();
+    
+    printWindow.onload = function() {
+        setTimeout(function() {
+            printWindow.print();
+            printWindow.onafterprint = function() {
+                printWindow.close();
+            };
+        }, 500);
+    };
+}
         
         async function validerPaiement() {
             if (!currentStudent) { showToast('Veuillez sélectionner un étudiant', 'warning'); return; }
@@ -1467,7 +1458,7 @@ translateY(-50%);
             
             for (const fiche of selectedFiches) {
                 if (studentPaidFiches.includes(fiche.id)) {
-                    showToast(`La fiche "${allFiches.find(f => f.id === fiche.id)?.nom}" a déjà été payée cette année`, 'error');
+                    showToast(`La fiche "${allFiches.find(f => f.id === fiche.id)?.nom}" a déjà été payée`, 'error');
                     return;
                 }
             }
@@ -1504,15 +1495,10 @@ translateY(-50%);
             btn.disabled = true;
             
             try {
-                // Écriture dans Firestore - sera automatiquement mise en cache localement
                 await db.collection('transactions').doc(numeroReçu).set(transaction);
-                
                 showToast('Paiement enregistré avec succès!', 'success');
-                
-                // Impression du reçu
                 imprimerReçu(transaction, fichesDetails, total, anneeNom, promoNom, montantLettres, numeroReçu);
                 
-                // Réinitialisation du formulaire
                 selectedFiches = [];
                 updateTotal();
                 document.getElementById('fichesContainer').style.display = 'none';
@@ -1520,13 +1506,11 @@ translateY(-50%);
                 document.getElementById('searchEtudiant').value = '';
                 currentStudent = null;
                 studentPaidFiches = [];
-                
                 mettreAJourStatsHeader();
             } catch (error) { 
                 showToast('Erreur lors du paiement: ' + error.message, 'error');
                 console.error(error);
-            }
-            finally { 
+            } finally { 
                 btn.innerHTML = originalText; 
                 btn.disabled = false; 
             }
@@ -1537,17 +1521,28 @@ translateY(-50%);
         async function genererRapport() {
             const anneeId = document.getElementById('rapportAnneeSelect').value;
             const promotionId = document.getElementById('rapportPromotionSelect').value;
+            const dateDebut = document.getElementById('dateDebut').value;
+            const dateFin = document.getElementById('dateFin').value;
             
-            // Utilisation du cache pour les rapports (source: 'cache' d'abord)
-            const snapshot = await db.collection('transactions')
-                .orderBy('date', 'desc')
-                .get({ source: 'default' });
+            let query = db.collection('transactions').orderBy('date', 'desc');
             
+            const snapshot = await query.get();
             let transactions = [];
             snapshot.forEach(doc => transactions.push({ id: doc.id, ...doc.data() }));
             
             if (anneeId) transactions = transactions.filter(t => t.anneeAcademiqueId === anneeId);
             if (promotionId) transactions = transactions.filter(t => t.promotion === promotionId);
+            
+            if (dateDebut) {
+                const debut = new Date(dateDebut);
+                debut.setHours(0, 0, 0, 0);
+                transactions = transactions.filter(t => t.date && t.date.toDate() >= debut);
+            }
+            if (dateFin) {
+                const fin = new Date(dateFin);
+                fin.setHours(23, 59, 59, 999);
+                transactions = transactions.filter(t => t.date && t.date.toDate() <= fin);
+            }
             
             const totalMontant = transactions.reduce((sum, t) => sum + (t.montantTotal || 0), 0);
             const totalEtudiants = new Set(transactions.map(t => t.etudiantId)).size;
@@ -1570,6 +1565,119 @@ translateY(-50%);
                     <td>${(t.montantTotal || 0).toLocaleString()} Fc</td>
                 </tr>`).join('');
             }
+            
+            window.currentRapportData = transactions;
+        }
+        
+        function exporterExcel() {
+            if (!window.currentRapportData || window.currentRapportData.length === 0) {
+                showToast('Aucune donnée à exporter', 'warning');
+                return;
+            }
+            
+            const data = window.currentRapportData.map(t => ({
+                'Date': t.date ? new Date(t.date.toDate()).toLocaleDateString('fr-FR') : '-',
+                'N° Reçu': t.numeroRecu || t.id,
+                'Étudiant': t.etudiantNom || '-',
+                'Promotion': t.promotionNom || t.promotion || '-',
+                'Année académique': t.anneeAcademiqueNom || '-',
+                'Nombre de fiches': t.fiches?.length || 0,
+                'Montant (FC)': t.montantTotal || 0
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Rapport Paiements');
+            XLSX.writeFile(wb, `rapport_paiements_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showToast('Export Excel réussi', 'success');
+        }
+        
+        function exporterPDF() {
+            if (!window.currentRapportData || window.currentRapportData.length === 0) {
+                showToast('Aucune donnée à exporter', 'warning');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+            
+            const tableData = window.currentRapportData.map(t => [
+                t.date ? new Date(t.date.toDate()).toLocaleDateString('fr-FR') : '-',
+                t.numeroRecu || t.id,
+                t.etudiantNom || '-',
+                t.promotionNom || t.promotion || '-',
+                t.anneeAcademiqueNom || '-',
+                (t.fiches?.length || 0).toString(),
+                (t.montantTotal || 0).toLocaleString() + ' FC'
+            ]);
+            
+            const totalMontant = window.currentRapportData.reduce((sum, t) => sum + (t.montantTotal || 0), 0);
+            
+            doc.text('Rapport des Paiements', 14, 15);
+            doc.text(`Généré le: ${new Date().toLocaleDateString('fr-FR')}`, 14, 25);
+            doc.text(`Montant total: ${totalMontant.toLocaleString()} FC`, 14, 35);
+            doc.text(`Nombre de transactions: ${window.currentRapportData.length}`, 14, 45);
+            
+            doc.autoTable({
+                startY: 55,
+                head: [['Date', 'N° Reçu', 'Étudiant', 'Promotion', 'Année', 'Nb Fiches', 'Montant']],
+                body: tableData,
+                theme: 'striped',
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [0, 51, 102], textColor: 255 }
+            });
+            
+            doc.save(`rapport_paiements_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast('Export PDF réussi', 'success');
+        }
+        
+        function imprimerRapport() {
+            if (!window.currentRapportData || window.currentRapportData.length === 0) {
+                showToast('Aucune donnée à imprimer', 'warning');
+                return;
+            }
+            
+            const printWindow = window.open('', '_blank');
+            const rows = window.currentRapportData.map(t => `
+                <tr>
+                    <td>${t.date ? new Date(t.date.toDate()).toLocaleDateString('fr-FR') : '-'}</td>
+                    <td><strong style="color:red">${t.numeroRecu || t.id}</strong></td>
+                    <td>${escapeHtml(t.etudiantNom || '-')}</td>
+                    <td>${escapeHtml(t.promotionNom || t.promotion || '-')}</td>
+                    <td>${escapeHtml(t.anneeAcademiqueNom || '-')}</td>
+                    <td>${t.fiches?.length || 0}</td>
+                    <td>${(t.montantTotal || 0).toLocaleString()} FC</td>
+                </tr>
+            `).join('');
+            
+            const totalMontant = window.currentRapportData.reduce((sum, t) => sum + (t.montantTotal || 0), 0);
+            
+            printWindow.document.write(`
+                <html><head><title>Rapport des Paiements</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h1 { color: #003366; text-align: center; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #003366; color: white; }
+                    .stats { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+                    @media print { body { margin: 0; padding: 10px; } }
+                </style>
+                </head><body>
+                <h1>Rapport des Paiements</h1>
+                <div class="stats">
+                    <p><strong>Date de génération:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
+                    <p><strong>Montant total collecté:</strong> ${totalMontant.toLocaleString()} FC</p>
+                    <p><strong>Nombre de transactions:</strong> ${window.currentRapportData.length}</p>
+                </div>
+                <table>
+                    <thead><tr><th>Date</th><th>N° Reçu</th><th>Étudiant</th><th>Promotion</th><th>Année</th><th>Nb Fiches</th><th>Montant</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                </body></html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
         }
         
         document.getElementById('profileBtn')?.addEventListener('click', () => {
@@ -1584,58 +1692,49 @@ translateY(-50%);
         document.getElementById('changePasswordBtn')?.addEventListener('click', async () => {
             const np = document.getElementById('newPassword').value;
             const cp = document.getElementById('confirmNewPassword').value;
-            if (np !== cp) { alert('Mots de passe différents'); return; }
-            if (np.length < 4) { alert('Minimum 4 caractères'); return; }
+            if (np !== cp) { showToast('Mots de passe différents', 'error'); return; }
+            if (np.length < 4) { showToast('Minimum 4 caractères', 'error'); return; }
             await db.collection('utilisateurs').doc(utilisateurActuel.id).update({ motDePasse: np });
-            alert('Mot de passe modifié');
+            showToast('Mot de passe modifié avec succès', 'success');
             closeProfileModal();
         });
         
         document.getElementById('logoutBtn')?.addEventListener('click', () => {
-            // Nettoyage des listeners avant déconnexion
-            if (unsubscribeAnnees) unsubscribeAnnees();
-            if (unsubscribePromotions) unsubscribePromotions();
-            if (unsubscribeEtudiants) unsubscribeEtudiants();
-            if (unsubscribeFiches) unsubscribeFiches();
-            if (unsubscribeTransactions) unsubscribeTransactions();
-            
             localStorage.removeItem('utilisateurCompta');
             window.location.href = 'login-comptabilite.html';
         });
         
         window.addEventListener('online', () => { 
-            isOnline = true; 
             document.getElementById('offlineIndicator').style.display = 'none'; 
             showToast('🟢 Connecté - Synchronisation en cours', 'success');
-            
-            // Force la synchronisation des données
-            db.collection('transactions').get({ source: 'server' }).catch(console.error);
         });
         
         window.addEventListener('offline', () => { 
-            isOnline = false; 
             document.getElementById('offlineIndicator').style.display = 'block'; 
-            showToast('🔴 Mode hors-ligne - Les données sont en cache local', 'warning');
+            showToast('🔴 Mode hors-ligne - Données en cache local', 'warning');
         });
         
-        // Initialisation
-        mettreAJourStatsHeader();
-        
-        // Exposer les fonctions globalement
         window.openPage = openPage;
         window.closePage = closePage;
         window.genererRapport = genererRapport;
         window.selectionnerEtudiant = selectionnerEtudiant;
         window.toggleFicheDirect = toggleFicheDirect;
         window.toggleFicheCheckbox = toggleFicheCheckbox;
+        window.exporterExcel = exporterExcel;
+        window.exporterPDF = exporterPDF;
+        window.imprimerRapport = imprimerRapport;
         
-        // Message de démarrage
+        mettreAJourStatsHeader();
+        
         if (!navigator.onLine) {
             showToast('📱 Mode hors-ligne actif - Données disponibles en cache', 'warning');
             document.getElementById('offlineIndicator').style.display = 'block';
         } else {
             showToast('✅ Application prête - Synchronisation active', 'success');
         }
+        
+        // Petit bonus: animation de chargement des données
+        console.log('🎓 Application de comptabilité - Faculté Agronomique - Version 2.0');
     </script>
 </body>
 </html>
